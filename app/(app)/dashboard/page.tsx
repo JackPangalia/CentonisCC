@@ -2,7 +2,6 @@
 /* This file renders the personal workspace dashboard page. */
 import { GoalManager } from "@/components/goals/GoalManager";
 import { SummaryCards } from "@/components/shared/SummaryCards";
-import { TeamManager } from "@/components/teams/TeamManager";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
@@ -23,14 +22,6 @@ export default function PersonalDashboardPage() {
         workspaceId={user.uid}
         goals={workspace.goals}
         onRefresh={workspace.refresh}
-      />
-      <TeamManager
-        userId={user.uid}
-        selectedTeam={null}
-        currentRole={null}
-        onRefreshTeams={async () => {
-          window.location.reload();
-        }}
       />
     </div>
   );

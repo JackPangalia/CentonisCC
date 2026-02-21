@@ -8,8 +8,9 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useCallback, useEffect, useState } from "react";
-import { createTask, listTasksByGoal, moveTask } from "@/services/taskService";
-import type { Task, TaskStatus, WorkspaceType } from "@/types/models";
+import { createTask, listTasksByGoal, moveTask, updateTask } from "@/services/taskService";
+import { listTeamMemberships } from "@/services/teamService";
+import type { Task, TaskStatus, WorkspaceType, TeamMembership } from "@/types/models";
 import { TaskComments } from "@/components/tasks/TaskComments";
 
 type TaskBoardProps = {
@@ -28,19 +29,97 @@ const columns: Array<{ id: TaskStatus; label: string }> = [
 function TaskCard({
   task,
   userId,
+  members,
+  onUpdate,
 }: {
   task: Task;
   userId: string;
+  members: TeamMembership[];
+  onUpdate: () => Promise<void>;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
     data: { taskId: task.id },
   });
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(task.title);
+  const [editDescription, setEditDescription] = useState(task.description || "");
+  const [editDueDate, setEditDueDate] = useState(task.dueDate);
+  const [editAssignee, setEditAssignee] = useState(task.assigneeUserId || "");
+
   const style = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.5 : 1,
   };
+
+  async function handleSave() {
+    await updateTask(task.id, {
+      title: editTitle,
+      description: editDescription,
+      dueDate: editDueDate,
+      assigneeUserId: editAssignee || null,
+    });
+    setIsEditing(false);
+    await onUpdate();
+  }
+
+  const assigneeMember = members.find((m) => m.userId === task.assigneeUserId);
+  const assigneeLabel = assigneeMember ? (assigneeMember.userEmail || "Unknown") : "Unassigned";
+
+  if (isEditing) {
+    return (
+      <div ref={setNodeRef} style={style} className="space-y-2 rounded border border-blue-200 bg-white p-2">
+        <input
+          className="w-full rounded border border-slate-300 p-1 text-sm"
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          placeholder="Task title"
+        />
+        <textarea
+          className="w-full rounded border border-slate-300 p-1 text-xs"
+          value={editDescription}
+          onChange={(e) => setEditDescription(e.target.value)}
+          placeholder="Description"
+          rows={3}
+        />
+        <input
+          type="date"
+          className="w-full rounded border border-slate-300 p-1 text-xs"
+          value={editDueDate}
+          onChange={(e) => setEditDueDate(e.target.value)}
+        />
+        {task.workspaceType === "team" && (
+          <select
+            className="w-full rounded border border-slate-300 p-1 text-xs"
+            value={editAssignee}
+            onChange={(e) => setEditAssignee(e.target.value)}
+          >
+            <option value="">Unassigned</option>
+            {members.map((m) => (
+              <option key={m.userId} value={m.userId}>
+                {m.userEmail || m.userId}
+              </option>
+            ))}
+          </select>
+        )}
+        <div className="flex gap-2">
+          <button
+            onClick={() => void handleSave()}
+            className="rounded bg-blue-600 px-2 py-1 text-xs text-white"
+          >
+            Save
+          </button>
+          <button
+            onClick={() => setIsEditing(false)}
+            className="rounded border border-slate-300 px-2 py-1 text-xs"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <article
@@ -48,20 +127,34 @@ function TaskCard({
       style={style}
       className="space-y-2 rounded border border-slate-200 bg-white p-2"
     >
-      <button
-        type="button"
-        className="w-full cursor-grab rounded bg-slate-100 p-1 text-left text-sm"
-        {...listeners}
-        {...attributes}
-      >
-        {task.title}
-      </button>
-      <p className="text-xs text-slate-500">Due: {task.dueDate}</p>
-      {task.workspaceType === "team" ? (
-        <p className="text-xs text-slate-500">
-          Assignee: {task.assigneeUserId ?? "Unassigned"}
-        </p>
+      <div className="flex justify-between items-start">
+        <button
+          type="button"
+          className="flex-1 cursor-grab rounded p-1 text-left text-sm font-medium hover:bg-slate-50"
+          {...listeners}
+          {...attributes}
+        >
+          {task.title}
+        </button>
+        <button
+          onClick={() => setIsEditing(true)}
+          className="text-xs text-slate-400 hover:text-blue-600 px-1"
+        >
+          Edit
+        </button>
+      </div>
+      
+      {task.description ? (
+        <p className="text-xs text-slate-600 line-clamp-2">{task.description}</p>
       ) : null}
+
+      <div className="flex flex-col gap-1 text-xs text-slate-500">
+        <p>Due: {task.dueDate}</p>
+        {task.workspaceType === "team" ? (
+          <p>Assignee: {assigneeLabel}</p>
+        ) : null}
+      </div>
+
       <TaskComments
         taskId={task.id}
         goalId={task.goalId}
@@ -78,11 +171,15 @@ function BoardColumn({
   label,
   tasks,
   userId,
+  members,
+  onUpdate,
 }: {
   columnId: TaskStatus;
   label: string;
   tasks: Task[];
   userId: string;
+  members: TeamMembership[];
+  onUpdate: () => Promise<void>;
 }) {
   const { setNodeRef } = useDroppable({ id: columnId });
 
@@ -91,7 +188,13 @@ function BoardColumn({
       <h3 className="mb-3 text-sm font-semibold">{label}</h3>
       <div className="space-y-2">
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} userId={userId} />
+          <TaskCard 
+            key={task.id} 
+            task={task} 
+            userId={userId} 
+            members={members}
+            onUpdate={onUpdate}
+          />
         ))}
       </div>
     </div>
@@ -106,15 +209,22 @@ export function TaskBoard({
 }: TaskBoardProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [assigneeUserId, setAssigneeUserId] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [members, setMembers] = useState<TeamMembership[]>([]);
 
   const refresh = useCallback(async () => {
     try {
       setErrorMessage("");
       const next = await listTasksByGoal(goalId, workspaceType, workspaceId);
       setTasks(next);
+      
+      if (workspaceType === "team") {
+        const teamMembers = await listTeamMemberships(workspaceId);
+        setMembers(teamMembers);
+      }
     } catch (error) {
       const message =
         error instanceof Error
@@ -136,10 +246,12 @@ export function TaskBoard({
       workspaceType,
       workspaceId,
       title,
+      description,
       dueDate,
       assigneeUserId: workspaceType === "team" ? assigneeUserId || null : null,
     });
     setTitle("");
+    setDescription("");
     setDueDate("");
     setAssigneeUserId("");
     await refresh();
@@ -161,34 +273,49 @@ export function TaskBoard({
       {errorMessage ? (
         <p className="rounded bg-red-50 p-2 text-sm text-red-600">{errorMessage}</p>
       ) : null}
-      <form onSubmit={handleCreateTask} className="grid gap-2 md:grid-cols-4">
-        <input
-          className="rounded border border-slate-300 p-2"
-          required
-          placeholder="Task title"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-        />
-        <input
-          className="rounded border border-slate-300 p-2"
-          type="date"
-          required
-          value={dueDate}
-          onChange={(event) => setDueDate(event.target.value)}
-        />
-        {workspaceType === "team" ? (
+      <form onSubmit={handleCreateTask} className="grid gap-2">
+        <div className="grid gap-2 md:grid-cols-4">
           <input
             className="rounded border border-slate-300 p-2"
-            placeholder="Assignee user ID (optional)"
-            value={assigneeUserId}
-            onChange={(event) => setAssigneeUserId(event.target.value)}
+            required
+            placeholder="Task title"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
           />
-        ) : (
-          <div />
-        )}
-        <button className="rounded bg-slate-900 px-3 py-2 text-sm text-white">
-          Add Task
-        </button>
+          <input
+            className="rounded border border-slate-300 p-2"
+            type="date"
+            required
+            value={dueDate}
+            onChange={(event) => setDueDate(event.target.value)}
+          />
+          {workspaceType === "team" ? (
+            <select
+              className="rounded border border-slate-300 p-2 bg-white"
+              value={assigneeUserId}
+              onChange={(event) => setAssigneeUserId(event.target.value)}
+            >
+              <option value="">Unassigned</option>
+              {members.map((m) => (
+                <option key={m.userId} value={m.userId}>
+                  {m.userEmail || m.userId}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div />
+          )}
+          <button className="rounded bg-slate-900 px-3 py-2 text-sm text-white">
+            Add Task
+          </button>
+        </div>
+        <textarea
+          className="rounded border border-slate-300 p-2 text-sm"
+          placeholder="Description (optional)"
+          rows={2}
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+        />
       </form>
 
       <DndContext onDragEnd={(event) => void handleDragEnd(event)}>
@@ -200,6 +327,8 @@ export function TaskBoard({
               label={column.label}
               tasks={tasks.filter((task) => task.status === column.id)}
               userId={userId}
+              members={members}
+              onUpdate={refresh}
             />
           ))}
         </div>

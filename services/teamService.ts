@@ -7,6 +7,8 @@ import {
   getDocs,
   query,
   setDoc,
+  updateDoc,
+  deleteDoc,
   where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -32,6 +34,7 @@ export async function createTeam(name: string, ownerUserId: string) {
     teamId: teamRef.id,
     userId: ownerUserId,
     role: "owner",
+    // owner email not strictly required on self-creation but good to have if available context
     createdAt: timestamp,
   };
 
@@ -98,13 +101,40 @@ export async function addTeamMemberByEmail(
   const userData = userMatch.data() as { id?: string };
   const memberUserId = userData.id ?? userMatch.id;
   const membershipId = `${teamId}_${memberUserId}`;
+  
+  // Check for existing membership to prevent duplicates
+  const existingRef = await getDoc(doc(db, "teamMemberships", membershipId));
+  if (existingRef.exists()) {
+    throw new Error("User is already a member of this team.");
+  }
+
   const membershipPayload: TeamMembership = {
     id: membershipId,
     teamId,
     userId: memberUserId,
+    userEmail: email,
     role,
     createdAt: nowIso(),
   };
 
   await setDoc(doc(db, "teamMemberships", membershipId), membershipPayload);
+}
+
+export async function listTeamMemberships(teamId: string): Promise<TeamMembership[]> {
+  const snapshot = await getDocs(
+    query(collection(db, "teamMemberships"), where("teamId", "==", teamId)),
+  );
+  return snapshot.docs.map((d) => d.data() as TeamMembership);
+}
+
+export async function updateMemberRole(membershipId: string, newRole: TeamRole) {
+  await updateDoc(doc(db, "teamMemberships", membershipId), { role: newRole });
+}
+
+export async function removeTeamMember(membershipId: string) {
+  await deleteDoc(doc(db, "teamMemberships", membershipId));
+}
+
+export async function deleteTeam(teamId: string) {
+  await deleteDoc(doc(db, "teams", teamId));
 }

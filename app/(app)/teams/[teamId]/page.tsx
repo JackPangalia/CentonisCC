@@ -10,7 +10,6 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import {
   getMembershipForUserInTeam,
   getTeamById,
-  getTeamsForUser,
 } from "@/services/teamService";
 import type { Team, TeamRole } from "@/types/models";
 
@@ -59,9 +58,6 @@ export default function TeamDashboardPage() {
         userId={user.uid}
         selectedTeam={team}
         currentRole={role}
-        onRefreshTeams={async () => {
-          await getTeamsForUser(user.uid);
-        }}
       />
     </div>
   );

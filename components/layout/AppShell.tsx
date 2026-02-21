@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/services/authService";
-import type { Team } from "@/types/models";
 
 type AppShellProps = {
   children: React.ReactNode;
-  teams: Team[];
 };
 
-export function AppShell({ children, teams }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -32,17 +30,16 @@ export function AppShell({ children, teams }: AppShellProps) {
             >
               Personal
             </Link>
-            {teams.map((team) => (
-              <Link
-                key={team.id}
-                href={`/teams/${team.id}`}
-                className={`rounded px-3 py-2 text-sm ${
-                  pathname === `/teams/${team.id}` ? "bg-blue-700 text-white" : "bg-slate-100"
-                }`}
-              >
-                {team.name}
-              </Link>
-            ))}
+            <Link
+              href="/teams"
+              className={`rounded px-3 py-2 text-sm ${
+                pathname === "/teams" || pathname.startsWith("/teams/")
+                  ? "bg-blue-700 text-white"
+                  : "bg-slate-100"
+              }`}
+            >
+              Teams
+            </Link>
           </div>
           <button
             type="button"

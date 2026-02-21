@@ -20,6 +20,7 @@ export async function createTask(input: {
   workspaceType: WorkspaceType;
   workspaceId: string;
   title: string;
+  description: string;
   dueDate: string;
   assigneeUserId?: string | null;
 }) {
@@ -29,6 +30,7 @@ export async function createTask(input: {
     workspaceType: input.workspaceType,
     workspaceId: input.workspaceId,
     title: input.title,
+    description: input.description,
     status: "todo",
     dueDate: input.dueDate,
     assigneeUserId: input.assigneeUserId ?? null,

@@ -24,6 +24,7 @@ export interface TeamMembership {
   teamId: string;
   userId: string;
   role: TeamRole;
+  userEmail?: string;
   createdAt: string;
 }
 
@@ -45,6 +46,7 @@ export interface Task {
   workspaceType: WorkspaceType;
   workspaceId: string;
   title: string;
+  description: string;
   status: TaskStatus;
   dueDate: string;
   assigneeUserId: string | null;
