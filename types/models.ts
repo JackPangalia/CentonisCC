@@ -3,6 +3,7 @@ export type WorkspaceType = "personal" | "team";
 export type TeamRole = "owner" | "member";
 export type GoalStatus = "Active" | "Completed";
 export type TaskStatus = "todo" | "in_progress" | "done";
+export type TaskPriority = "low" | "medium" | "high";
 
 export interface AppUser {
   id: string;
@@ -48,6 +49,9 @@ export interface Task {
   title: string;
   description: string;
   status: TaskStatus;
+  priority?: TaskPriority;
+  estimatedMinutes?: number;
+  actualMinutes?: number;
   dueDate: string;
   assigneeUserId: string | null;
   createdAt: string;

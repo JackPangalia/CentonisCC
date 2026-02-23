@@ -2,6 +2,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -65,6 +66,10 @@ export async function updateGoal(
 
 export async function setGoalStatus(goalId: string, status: GoalStatus) {
   await updateGoal(goalId, { status });
+}
+
+export async function deleteGoal(goalId: string) {
+  await deleteDoc(doc(db, "goals", goalId));
 }
 
 export async function getGoalById(goalId: string): Promise<Goal | null> {
