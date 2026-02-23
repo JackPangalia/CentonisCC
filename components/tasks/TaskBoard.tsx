@@ -7,7 +7,7 @@ import {
   useDroppable,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { createTask, deleteTask, listTasksByGoal, moveTask, updateTask } from "@/services/taskService";
 import { listTeamMemberships } from "@/services/teamService";
 import type { Task, TaskStatus, WorkspaceType, TeamMembership } from "@/types/models";
@@ -15,6 +15,9 @@ import { TaskComments } from "@/components/tasks/TaskComments";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
 
 type TaskBoardProps = {
+  tasks: Task[];
+  members: TeamMembership[];
+  onUpdate: () => Promise<void>;
   goalId: string;
   workspaceType: WorkspaceType;
   workspaceId: string;
@@ -44,6 +47,7 @@ function TaskCard({
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isTitleEditing, setIsTitleEditing] = useState(false);
   
   // Store original values for reset
   const [originalValues, setOriginalValues] = useState({
@@ -114,6 +118,16 @@ function TaskCard({
       actualMinutes: Number(editActual),
     });
     setIsEditing(false);
+    await onUpdate();
+  }
+
+  async function handleTitleSave() {
+    if (editTitle.trim() === task.title) {
+      setIsTitleEditing(false);
+      return;
+    }
+    await updateTask(task.id, { title: editTitle });
+    setIsTitleEditing(false);
     await onUpdate();
   }
 
@@ -239,15 +253,56 @@ function TaskCard({
         task.priority === "high" ? "border-l-4 border-l-red-500" : "border-slate-200"
       } ${isOverdue ? "border-red-300 bg-red-50" : ""}`}
     >
-      {/* Header: Title (draggable) */}
-      <button
-        type="button"
-        className="w-full cursor-grab text-left text-sm font-medium text-slate-800 hover:text-slate-900 active:cursor-grabbing"
-        {...listeners}
-        {...attributes}
-      >
-        {task.title}
-      </button>
+      {/* Header: Title (draggable & inline editable) */}
+      {isTitleEditing ? (
+        <input
+          autoFocus
+          className="w-full rounded border-blue-500 border p-1 text-sm font-medium text-slate-800 outline-none"
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          onBlur={handleTitleSave}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleTitleSave();
+            if (e.key === "Escape") {
+              setEditTitle(task.title);
+              setIsTitleEditing(false);
+            }
+          }}
+        />
+      ) : (
+        <div className="flex items-start justify-between gap-2">
+          <button
+            type="button"
+            className="flex-1 cursor-grab text-left text-sm font-medium text-slate-800 hover:text-blue-600 active:cursor-grabbing"
+            onClick={(e) => {
+              // Only edit if not dragging
+              if (e.detail === 1) {
+                setIsTitleEditing(true);
+              }
+            }}
+            {...listeners}
+            {...attributes}
+          >
+            {task.title}
+          </button>
+          <div className="flex opacity-0 group-hover:opacity-100 transition-opacity gap-1">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="text-slate-400 hover:text-blue-600 p-1 rounded"
+              title="Edit details"
+            >
+              ✏️
+            </button>
+            <button
+              onClick={() => void handleDelete()}
+              className="text-slate-400 hover:text-red-600 p-1 rounded"
+              title="Delete task"
+            >
+              🗑️
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Description */}
       {task.description ? (
@@ -284,29 +339,17 @@ function TaskCard({
         )}
       </div>
 
-      {/* Actions: Edit & Delete buttons */}
-      <div className="flex gap-1 pt-1 border-t border-slate-100">
-        <button
-          onClick={() => setIsEditing(true)}
-          className="flex-1 rounded px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-blue-600 transition-colors"
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => void handleDelete()}
-          className="flex-1 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
-        >
-          Delete
-        </button>
+      {/* Actions: Edit & Delete buttons (Removed - moved to hover) */}
+      
+      <div className="pt-2">
+        <TaskComments
+          taskId={task.id}
+          goalId={task.goalId}
+          workspaceType={task.workspaceType}
+          workspaceId={task.workspaceId}
+          authorUserId={userId}
+        />
       </div>
-
-      <TaskComments
-        taskId={task.id}
-        goalId={task.goalId}
-        workspaceType={task.workspaceType}
-        workspaceId={task.workspaceId}
-        authorUserId={userId}
-      />
     </article>
   );
 }
@@ -347,66 +390,15 @@ function BoardColumn({
 }
 
 export function TaskBoard({
+  tasks,
+  members,
+  onUpdate,
   goalId,
   workspaceType,
   workspaceId,
   userId,
 }: TaskBoardProps) {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
-  const [estimatedMinutes, setEstimatedMinutes] = useState("");
-  const [assigneeUserId, setAssigneeUserId] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [members, setMembers] = useState<TeamMembership[]>([]);
-
-  const refresh = useCallback(async () => {
-    try {
-      setErrorMessage("");
-      const next = await listTasksByGoal(goalId, workspaceType, workspaceId);
-      setTasks(next);
-      
-      if (workspaceType === "team") {
-        const teamMembers = await listTeamMemberships(workspaceId);
-        setMembers(teamMembers);
-      }
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Could not load tasks right now.";
-      setErrorMessage(message);
-      setTasks([]);
-    }
-  }, [goalId, workspaceId, workspaceType]);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  async function handleCreateTask(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    await createTask({
-      goalId,
-      workspaceType,
-      workspaceId,
-      title,
-      description,
-      dueDate,
-      priority,
-      estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : 0,
-      assigneeUserId: workspaceType === "team" ? assigneeUserId || null : null,
-    });
-    setTitle("");
-    setDescription("");
-    setDueDate("");
-    setPriority("medium");
-    setEstimatedMinutes("");
-    setAssigneeUserId("");
-    await refresh();
-  }
 
   async function handleDragEnd(event: DragEndEvent) {
     const taskId = String(event.active.id);
@@ -415,7 +407,7 @@ export function TaskBoard({
       return;
     }
     await moveTask(taskId, targetStatus);
-    await refresh();
+    await onUpdate();
   }
 
   return (
@@ -425,72 +417,6 @@ export function TaskBoard({
         <p className="rounded bg-red-50 p-2 text-sm text-red-600 border border-red-200">{errorMessage}</p>
       ) : null}
       
-      {/* Create Task Form */}
-      <form onSubmit={handleCreateTask} className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <input
-            className="rounded border border-slate-300 p-2 text-sm"
-            required
-            placeholder="Task title"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-          />
-          <input
-            className="rounded border border-slate-300 p-2 text-sm"
-            type="date"
-            required
-            value={dueDate}
-            onChange={(event) => setDueDate(event.target.value)}
-          />
-          <select
-            className="rounded border border-slate-300 p-2 text-sm bg-white"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as any)}
-          >
-            <option value="low">Low Priority</option>
-            <option value="medium">Medium Priority</option>
-            <option value="high">High Priority</option>
-          </select>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <input
-            type="number"
-            className="rounded border border-slate-300 p-2 text-sm"
-            placeholder="Estimated minutes (optional)"
-            value={estimatedMinutes}
-            onChange={(e) => setEstimatedMinutes(e.target.value)}
-          />
-          {workspaceType === "team" ? (
-            <select
-              className="rounded border border-slate-300 p-2 text-sm bg-white"
-              value={assigneeUserId}
-              onChange={(event) => setAssigneeUserId(event.target.value)}
-            >
-              <option value="">Unassigned</option>
-              {members.map((m) => (
-                <option key={m.userId} value={m.userId}>
-                  {m.userEmail || m.userId}
-                </option>
-              ))}
-            </select>
-          ) : null}
-        </div>
-        <div className="mt-2">
-          <label className="text-sm font-medium text-slate-700 block mb-1">Description</label>
-          <RichTextEditor
-            content={description}
-            onChange={setDescription}
-            placeholder="Add details, checklists, or type '/' for commands..."
-          />
-        </div>
-        <button 
-          type="submit"
-          className="w-full rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
-        >
-          Add Task
-        </button>
-      </form>
-
       <DndContext onDragEnd={(event) => void handleDragEnd(event)}>
         <div className="grid gap-3 md:grid-cols-3">
           {columns.map((column) => (
@@ -501,7 +427,7 @@ export function TaskBoard({
               tasks={tasks.filter((task) => task.status === column.id)}
               userId={userId}
               members={members}
-              onUpdate={refresh}
+              onUpdate={onUpdate}
             />
           ))}
         </div>

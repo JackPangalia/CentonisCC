@@ -3,12 +3,14 @@
 import type { Task } from "@/types/models";
 import { useMemo } from "react";
 import Link from "next/link";
+import { deleteTask } from "@/services/taskService";
 
 type TodaysFocusProps = {
   tasks: Task[];
+  onRefresh: () => Promise<void>;
 };
 
-export function TodaysFocus({ tasks }: TodaysFocusProps) {
+export function TodaysFocus({ tasks, onRefresh }: TodaysFocusProps) {
   // Use local date for "today" comparison
   const today = new Date().toLocaleDateString('en-CA');
 
@@ -46,6 +48,12 @@ export function TodaysFocus({ tasks }: TodaysFocusProps) {
   }, [tasks, today]);
 
   const progress = totalDueToday > 0 ? Math.round((completedToday / totalDueToday) * 100) : 0;
+
+  async function handleDelete(taskId: string) {
+    if (!confirm("Are you sure you want to delete this task?")) return;
+    await deleteTask(taskId);
+    await onRefresh();
+  }
 
   return (
     <section className="space-y-4 rounded-lg bg-white p-4 shadow-sm border border-blue-100">
@@ -89,9 +97,18 @@ export function TodaysFocus({ tasks }: TodaysFocusProps) {
                    {task.estimatedMinutes ? <span>⏱ {task.estimatedMinutes}m est.</span> : null}
                 </div>
               </div>
-              <Link href={`/goals/${task.goalId}`} className="text-xs px-2 py-1 bg-white border border-slate-300 rounded hover:bg-slate-50">
-                View
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link href={`/goals/${task.goalId}`} className="text-xs px-2 py-1 bg-white border border-slate-300 rounded hover:bg-slate-50">
+                  View
+                </Link>
+                <button
+                  onClick={() => handleDelete(task.id)}
+                  className="text-xs px-2 py-1 bg-white border border-red-200 text-red-600 rounded hover:bg-red-50"
+                  title="Delete task"
+                >
+                  🗑️
+                </button>
+              </div>
             </div>
           ))
         )}

@@ -18,7 +18,7 @@ export default function PersonalDashboardPage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Personal Dashboard</h1>
       <SummaryCards summary={workspace.summary} />
-      <TodaysFocus tasks={workspace.tasks} />
+      <TodaysFocus tasks={workspace.tasks} onRefresh={workspace.refresh} />
       <GoalManager
         workspaceType="personal"
         workspaceId={user.uid}

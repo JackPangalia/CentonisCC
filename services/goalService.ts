@@ -9,6 +9,7 @@ import {
   query,
   updateDoc,
   where,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Goal, GoalStatus, WorkspaceType } from "@/types/models";
@@ -69,7 +70,22 @@ export async function setGoalStatus(goalId: string, status: GoalStatus) {
 }
 
 export async function deleteGoal(goalId: string) {
-  await deleteDoc(doc(db, "goals", goalId));
+  const batch = writeBatch(db);
+  
+  // 1. Delete the goal
+  batch.delete(doc(db, "goals", goalId));
+
+  // 2. Delete all tasks associated with this goal
+  const tasksSnapshot = await getDocs(
+    query(collection(db, "tasks"), where("goalId", "==", goalId))
+  );
+  
+  tasksSnapshot.docs.forEach((taskDoc) => {
+    batch.delete(taskDoc.ref);
+  });
+
+  // 3. Commit the batch
+  await batch.commit();
 }
 
 export async function getGoalById(goalId: string): Promise<Goal | null> {
