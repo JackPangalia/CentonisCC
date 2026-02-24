@@ -8,11 +8,12 @@ import { TaskBoard } from "@/components/tasks/TaskBoard";
 import { TaskListView } from "@/components/tasks/TaskListView";
 import { TaskCalendarView } from "@/components/tasks/TaskCalendarView";
 import { CreateTaskForm } from "@/components/tasks/CreateTaskForm";
+import { TaskFilterBar } from "@/components/tasks/TaskFilterBar";
 import { useAuth } from "@/hooks/useAuth";
 import { getGoalById } from "@/services/goalService";
-import { listTasksByGoal } from "@/services/taskService";
+import { listTasksByGoal, filterTasks } from "@/services/taskService";
 import { listTeamMemberships } from "@/services/teamService";
-import type { Goal, Task, TeamMembership } from "@/types/models";
+import type { Goal, Task, TeamMembership, TaskFilter } from "@/types/models";
 
 export default function GoalTasksPage() {
   const params = useParams<{ goalId: string }>();
@@ -24,6 +25,10 @@ export default function GoalTasksPage() {
   const [view, setView] = useState<"board" | "list" | "calendar">("board");
   const [errorMessage, setErrorMessage] = useState("");
   const [loadingData, setLoadingData] = useState(true);
+  const [filter, setFilter] = useState<TaskFilter>({});
+
+  // Apply filters to tasks
+  const filteredTasks = filterTasks(tasks, filter);
 
   const loadData = useCallback(async () => {
     if (!user || !goalId) return;
@@ -97,6 +102,19 @@ export default function GoalTasksPage() {
   const progress = tasks.length > 0 
     ? Math.round((tasks.filter(t => t.status === "done").length / tasks.length) * 100) 
     : 0;
+
+  // Calculate progress based on filtered tasks if filters are active
+  const hasActiveFilters = Object.keys(filter).length > 0 && (
+    (filter.status && filter.status.length > 0) ||
+    (filter.priority && filter.priority.length > 0) ||
+    (filter.assigneeUserId && filter.assigneeUserId.length > 0) ||
+    (filter.tags && filter.tags.length > 0) ||
+    filter.dateRange?.start ||
+    filter.dateRange?.end ||
+    (filter.searchQuery && filter.searchQuery.trim()) ||
+    filter.showBlocked !== undefined ||
+    filter.showSubtasks === false
+  );
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -176,12 +194,21 @@ export default function GoalTasksPage() {
         </nav>
       </div>
 
+      {/* Filter Bar */}
+      <TaskFilterBar
+        tasks={tasks}
+        members={members}
+        filter={filter}
+        onFilterChange={setFilter}
+      />
+
       {/* Create Task Form */}
       <CreateTaskForm 
         goalId={goal.id}
         workspaceType={goal.workspaceType}
         workspaceId={goal.workspaceId}
         members={members}
+        existingTasks={tasks}
         onTaskCreated={handleRefresh}
       />
 
@@ -189,7 +216,7 @@ export default function GoalTasksPage() {
       <div className="min-h-[500px]">
         {view === "board" && (
           <TaskBoard
-            tasks={tasks}
+            tasks={filteredTasks}
             members={members}
             onUpdate={handleRefresh}
             goalId={goal.id}
@@ -200,14 +227,14 @@ export default function GoalTasksPage() {
         )}
         {view === "list" && (
           <TaskListView
-            tasks={tasks}
+            tasks={filteredTasks}
             members={members}
             onUpdate={handleRefresh}
           />
         )}
         {view === "calendar" && (
           <TaskCalendarView
-            tasks={tasks}
+            tasks={filteredTasks}
           />
         )}
       </div>

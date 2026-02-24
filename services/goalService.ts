@@ -69,23 +69,28 @@ export async function setGoalStatus(goalId: string, status: GoalStatus) {
   await updateGoal(goalId, { status });
 }
 
-export async function deleteGoal(goalId: string) {
-  const batch = writeBatch(db);
-  
-  // 1. Delete the goal
-  batch.delete(doc(db, "goals", goalId));
-
-  // 2. Delete all tasks associated with this goal
+export async function deleteGoal(goalId: string, workspaceType: WorkspaceType, workspaceId: string) {
+  // 1. Delete all tasks associated with this goal first
+  // We do this first so that task deletion rules (which might check goal existence) pass
+  // We must filter by workspace info to satisfy security rules for reading tasks
   const tasksSnapshot = await getDocs(
-    query(collection(db, "tasks"), where("goalId", "==", goalId))
+    query(
+      collection(db, "tasks"), 
+      where("goalId", "==", goalId),
+      where("workspaceType", "==", workspaceType),
+      where("workspaceId", "==", workspaceId)
+    )
   );
   
+  const batch = writeBatch(db);
   tasksSnapshot.docs.forEach((taskDoc) => {
     batch.delete(taskDoc.ref);
   });
-
-  // 3. Commit the batch
+  
   await batch.commit();
+
+  // 2. Delete the goal
+  await deleteDoc(doc(db, "goals", goalId));
 }
 
 export async function getGoalById(goalId: string): Promise<Goal | null> {

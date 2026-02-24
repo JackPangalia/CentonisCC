@@ -47,10 +47,15 @@ export function GoalManager({
     await onRefresh();
   }
 
-  async function handleDelete(goalId: string) {
+  async function handleDelete(goal: Goal) {
     if (!confirm("Are you sure you want to delete this goal?")) return;
-    await deleteGoal(goalId);
-    await onRefresh();
+    try {
+      await deleteGoal(goal.id, goal.workspaceType, goal.workspaceId);
+      await onRefresh();
+    } catch (error) {
+      console.error("Failed to delete goal:", error);
+      alert(`Failed to delete goal: ${(error as Error).message}`);
+    }
   }
 
   return (
@@ -162,7 +167,7 @@ export function GoalManager({
                       <button
                         type="button"
                         className="rounded border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-100 transition-colors"
-                        onClick={() => void handleDelete(goal.id)}
+                        onClick={() => void handleDelete(goal)}
                       >
                         Delete
                       </button>

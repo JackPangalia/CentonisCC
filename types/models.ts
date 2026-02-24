@@ -37,6 +37,7 @@ export interface Goal {
   description: string;
   dueDate: string;
   status: GoalStatus;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -54,8 +55,26 @@ export interface Task {
   actualMinutes?: number;
   dueDate: string;
   assigneeUserId: string | null;
+  tags?: string[];
+  parentTaskId?: string | null;
+  blockedByTaskIds?: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TaskFilter {
+  status?: TaskStatus[];
+  priority?: TaskPriority[];
+  assigneeUserId?: string[];
+  tags?: string[];
+  dateRange?: {
+    start?: string;
+    end?: string;
+  };
+  searchQuery?: string;
+  parentTaskId?: string | null;
+  showBlocked?: boolean;
+  showSubtasks?: boolean;
 }
 
 export interface Comment {

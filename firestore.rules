@@ -28,6 +28,19 @@ service cloud.firestore {
       return workspaceType == "team" && isTeamMember(workspaceId);
     }
 
+    function canAccessGoalWorkspace(goalId) {
+      return exists(/databases/$(database)/documents/goals/$(goalId)) && (
+        isPersonalWorkspace(
+          get(/databases/$(database)/documents/goals/$(goalId)).data.workspaceType,
+          get(/databases/$(database)/documents/goals/$(goalId)).data.workspaceId
+        ) ||
+        isTeamWorkspace(
+          get(/databases/$(database)/documents/goals/$(goalId)).data.workspaceType,
+          get(/databases/$(database)/documents/goals/$(goalId)).data.workspaceId
+        )
+      );
+    }
+
     match /users/{userId} {
       allow read: if isSignedIn();
       allow write: if isSignedIn() && request.auth.uid == userId;
@@ -80,9 +93,14 @@ service cloud.firestore {
         isPersonalWorkspace(request.resource.data.workspaceType, request.resource.data.workspaceId) ||
         isTeamWorkspace(request.resource.data.workspaceType, request.resource.data.workspaceId)
       );
-      allow update, delete: if isSignedIn() && (
+      allow update: if isSignedIn() && (
         isPersonalWorkspace(resource.data.workspaceType, resource.data.workspaceId) ||
         isTeamWorkspace(resource.data.workspaceType, resource.data.workspaceId)
+      );
+      allow delete: if isSignedIn() && (
+        isPersonalWorkspace(resource.data.workspaceType, resource.data.workspaceId) ||
+        isTeamWorkspace(resource.data.workspaceType, resource.data.workspaceId) ||
+        (resource.data.goalId != null && canAccessGoalWorkspace(resource.data.goalId))
       );
     }
 

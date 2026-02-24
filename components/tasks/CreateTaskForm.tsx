@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createTask } from "@/services/taskService";
-import type { WorkspaceType, TeamMembership } from "@/types/models";
+import type { WorkspaceType, TeamMembership, Task } from "@/types/models";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
 
 type CreateTaskFormProps = {
@@ -10,6 +10,7 @@ type CreateTaskFormProps = {
   workspaceType: WorkspaceType;
   workspaceId: string;
   members: TeamMembership[];
+  existingTasks: Task[];
   onTaskCreated: () => Promise<void>;
 };
 
@@ -18,6 +19,7 @@ export function CreateTaskForm({
   workspaceType,
   workspaceId,
   members,
+  existingTasks,
   onTaskCreated,
 }: CreateTaskFormProps) {
   const [title, setTitle] = useState("");
@@ -26,9 +28,20 @@ export function CreateTaskForm({
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
   const [estimatedMinutes, setEstimatedMinutes] = useState("");
   const [assigneeUserId, setAssigneeUserId] = useState("");
+  const [tags, setTags] = useState("");
+  const [parentTaskId, setParentTaskId] = useState("");
+  const [blockedByTaskIds, setBlockedByTaskIds] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const titleInputRef = useRef<HTMLInputElement>(null);
+
+  // Filter out tasks that are already subtasks (to avoid circular dependencies)
+  const availableParentTasks = existingTasks.filter(
+    (task) => !task.parentTaskId || task.parentTaskId === null
+  );
+  
+  // Filter out the current task being created and its potential subtasks
+  const availableDependencyTasks = existingTasks;
 
   // Keyboard shortcut 'n' to focus
   useEffect(() => {
@@ -56,6 +69,12 @@ export function CreateTaskForm({
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     try {
+      // Parse tags from comma-separated string
+      const tagsArray = tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
+
       await createTask({
         goalId,
         workspaceType,
@@ -66,6 +85,9 @@ export function CreateTaskForm({
         priority,
         estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : 0,
         assigneeUserId: workspaceType === "team" ? assigneeUserId || null : null,
+        tags: tagsArray.length > 0 ? tagsArray : undefined,
+        parentTaskId: parentTaskId || null,
+        blockedByTaskIds: blockedByTaskIds.length > 0 ? blockedByTaskIds : undefined,
       });
       setTitle("");
       setDescription("");
@@ -73,11 +95,22 @@ export function CreateTaskForm({
       setPriority("medium");
       setEstimatedMinutes("");
       setAssigneeUserId("");
+      setTags("");
+      setParentTaskId("");
+      setBlockedByTaskIds([]);
       setIsExpanded(false);
       await onTaskCreated();
     } catch (error) {
        setErrorMessage("Failed to create task.");
     }
+  }
+
+  function toggleDependency(taskId: string) {
+    setBlockedByTaskIds((prev) =>
+      prev.includes(taskId)
+        ? prev.filter((id) => id !== taskId)
+        : [...prev, taskId]
+    );
   }
 
   if (!isExpanded) {
@@ -174,6 +207,66 @@ export function CreateTaskForm({
           placeholder="Add details, checklists, or type '/' for commands..."
         />
       </div>
+
+      {/* Tags Input */}
+      <div>
+        <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Tags</label>
+        <input
+          type="text"
+          className="w-full rounded border border-slate-300 p-2 text-sm"
+          placeholder="Enter tags separated by commas (e.g., frontend, urgent, bug)"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+        />
+        <p className="mt-1 text-xs text-slate-400">Separate multiple tags with commas</p>
+      </div>
+
+      {/* Parent Task Selector */}
+      {availableParentTasks.length > 0 && (
+        <div>
+          <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Parent Task (Optional)</label>
+          <select
+            className="w-full rounded border border-slate-300 p-2 text-sm bg-white"
+            value={parentTaskId}
+            onChange={(e) => setParentTaskId(e.target.value)}
+          >
+            <option value="">None (Top-level task)</option>
+            {availableParentTasks.map((task) => (
+              <option key={task.id} value={task.id}>
+                {task.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Dependencies Selector */}
+      {availableDependencyTasks.length > 0 && (
+        <div>
+          <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Blocked By (Dependencies)</label>
+          <div className="max-h-32 overflow-y-auto rounded border border-slate-300 bg-white p-2 space-y-1">
+            {availableDependencyTasks.map((task) => (
+              <label
+                key={task.id}
+                className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded"
+              >
+                <input
+                  type="checkbox"
+                  checked={blockedByTaskIds.includes(task.id)}
+                  onChange={() => toggleDependency(task.id)}
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="truncate">{task.title}</span>
+              </label>
+            ))}
+          </div>
+          {blockedByTaskIds.length > 0 && (
+            <p className="mt-1 text-xs text-slate-500">
+              This task will be blocked until {blockedByTaskIds.length} task(s) are completed
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="flex justify-end gap-2 pt-2">
         <button 

@@ -90,14 +90,31 @@ export function TaskCalendarView({ tasks }: TaskCalendarViewProps) {
                 {dayTasks.map((task) => (
                   <div 
                     key={task.id} 
-                    className={`text-[10px] truncate px-1.5 py-0.5 rounded border ${
+                    className={`text-[10px] px-1.5 py-0.5 rounded border ${
                       task.status === 'done' 
                         ? 'bg-emerald-50 border-emerald-100 text-emerald-700 line-through opacity-70' 
                         : 'bg-blue-50 border-blue-100 text-blue-700'
                     }`}
-                    title={task.title}
+                    title={`${task.title}${task.tags && task.tags.length > 0 ? ` [${task.tags.join(', ')}]` : ''}`}
                   >
-                    {task.title}
+                    <div className="truncate">{task.title}</div>
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-0.5 mt-0.5">
+                        {task.tags.slice(0, 2).map((tag, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-emerald-200 text-emerald-800 px-1 rounded text-[8px] font-medium"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {task.tags.length > 2 && (
+                          <span className="text-[8px] text-slate-500">
+                            +{task.tags.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

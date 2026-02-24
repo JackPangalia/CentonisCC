@@ -8,7 +8,7 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useCallback, useEffect, useState, useRef } from "react";
-import { createTask, deleteTask, listTasksByGoal, moveTask, updateTask } from "@/services/taskService";
+import { createTask, deleteTask, listTasksByGoal, moveTask, updateTask, getSubtasks, isTaskBlocked } from "@/services/taskService";
 import { listTeamMemberships } from "@/services/teamService";
 import type { Task, TaskStatus, WorkspaceType, TeamMembership } from "@/types/models";
 import { TaskComments } from "@/components/tasks/TaskComments";
@@ -34,13 +34,16 @@ function TaskCard({
   task,
   userId,
   members,
+  allTasks,
   onUpdate,
 }: {
   task: Task;
   userId: string;
   members: TeamMembership[];
+  allTasks: Task[];
   onUpdate: () => Promise<void>;
 }) {
+  const [isSubtasksExpanded, setIsSubtasksExpanded] = useState(true);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
     data: { taskId: task.id },
@@ -144,6 +147,20 @@ function TaskCard({
   const today = new Date().toLocaleDateString('en-CA');
   const isOverdue = task.dueDate < today && task.status !== "done";
 
+  // Get subtasks
+  const subtasks = getSubtasks(allTasks, task.id);
+  const completedSubtasks = subtasks.filter((st) => st.status === "done").length;
+  const subtaskProgress = subtasks.length > 0 ? Math.round((completedSubtasks / subtasks.length) * 100) : 0;
+
+  // Check if blocked
+  const blocked = isTaskBlocked(task, allTasks);
+  const blockingTasks = task.blockedByTaskIds
+    ? allTasks.filter((t) => task.blockedByTaskIds!.includes(t.id))
+    : [];
+
+  // Check if this is a subtask
+  const isSubtask = task.parentTaskId && task.parentTaskId !== null;
+
   if (isEditing) {
     return (
       <div ref={setNodeRef} style={style} className="space-y-2 rounded-lg border-2 border-blue-300 bg-white p-3 shadow-sm">
@@ -246,13 +263,14 @@ function TaskCard({
   };
 
   return (
-    <article
-      ref={setNodeRef}
-      style={style}
-      className={`group space-y-2 rounded-lg border bg-white p-2.5 shadow-sm transition-all hover:shadow-md ${
-        task.priority === "high" ? "border-l-4 border-l-red-500" : "border-slate-200"
-      } ${isOverdue ? "border-red-300 bg-red-50" : ""}`}
-    >
+    <div className={`${isSubtask ? "ml-4 border-l-2 border-l-blue-300 pl-2" : ""}`}>
+      <article
+        ref={setNodeRef}
+        style={style}
+        className={`group space-y-2 rounded-lg border bg-white p-2.5 shadow-sm transition-all hover:shadow-md ${
+          task.priority === "high" ? "border-l-4 border-l-red-500" : "border-slate-200"
+        } ${isOverdue ? "border-red-300 bg-red-50" : ""} ${blocked ? "opacity-60" : ""}`}
+      >
       {/* Header: Title (draggable & inline editable) */}
       {isTitleEditing ? (
         <input
@@ -271,20 +289,35 @@ function TaskCard({
         />
       ) : (
         <div className="flex items-start justify-between gap-2">
-          <button
-            type="button"
-            className="flex-1 cursor-grab text-left text-sm font-medium text-slate-800 hover:text-blue-600 active:cursor-grabbing"
-            onClick={(e) => {
-              // Only edit if not dragging
-              if (e.detail === 1) {
-                setIsTitleEditing(true);
-              }
-            }}
-            {...listeners}
-            {...attributes}
-          >
-            {task.title}
-          </button>
+          <div className="flex-1 flex items-start gap-2">
+            {subtasks.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setIsSubtasksExpanded(!isSubtasksExpanded)}
+                className="text-slate-400 hover:text-blue-600 mt-0.5"
+                title={isSubtasksExpanded ? "Collapse subtasks" : "Expand subtasks"}
+              >
+                {isSubtasksExpanded ? "▼" : "▶"}
+              </button>
+            )}
+            {isSubtask && (
+              <span className="text-xs text-slate-400 mt-1" title="Subtask">└</span>
+            )}
+            <button
+              type="button"
+              className="flex-1 cursor-grab text-left text-sm font-medium text-slate-800 hover:text-blue-600 active:cursor-grabbing"
+              onClick={(e) => {
+                // Only edit if not dragging
+                if (e.detail === 1) {
+                  setIsTitleEditing(true);
+                }
+              }}
+              {...listeners}
+              {...attributes}
+            >
+              {task.title}
+            </button>
+          </div>
           <div className="flex opacity-0 group-hover:opacity-100 transition-opacity gap-1">
             <button
               onClick={() => setIsEditing(true)}
@@ -311,6 +344,46 @@ function TaskCard({
           dangerouslySetInnerHTML={{ __html: task.description }}
         />
       ) : null}
+
+      {/* Tags */}
+      {task.tags && task.tags.length > 0 && (
+        <div className="flex items-center gap-1 flex-wrap">
+          {task.tags.map((tag, idx) => (
+            <span
+              key={idx}
+              className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 border border-emerald-200"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Blocked Indicator */}
+      {blocked && blockingTasks.length > 0 && (
+        <div className="rounded bg-amber-50 border border-amber-200 px-2 py-1 text-xs text-amber-800">
+          <span className="font-semibold">⚠️ Blocked by:</span>{" "}
+          {blockingTasks.map((bt) => bt.title).join(", ")}
+        </div>
+      )}
+
+      {/* Subtask Progress */}
+      {subtasks.length > 0 && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-xs text-slate-600">
+            <span>
+              📋 {completedSubtasks}/{subtasks.length} subtasks
+            </span>
+            <span className="font-medium">{subtaskProgress}%</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+            <div
+              className="h-full bg-blue-500 transition-all"
+              style={{ width: `${subtaskProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Metadata Row: Priority & Time */}
       <div className="flex items-center gap-2 flex-wrap">
@@ -350,7 +423,24 @@ function TaskCard({
           authorUserId={userId}
         />
       </div>
-    </article>
+      </article>
+
+      {/* Render Subtasks */}
+      {subtasks.length > 0 && isSubtasksExpanded && (
+        <div className="mt-2 space-y-2">
+          {subtasks.map((subtask) => (
+            <TaskCard
+              key={subtask.id}
+              task={subtask}
+              userId={userId}
+              members={members}
+              allTasks={allTasks}
+              onUpdate={onUpdate}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -358,6 +448,7 @@ function BoardColumn({
   columnId,
   label,
   tasks,
+  allTasks,
   userId,
   members,
   onUpdate,
@@ -365,6 +456,7 @@ function BoardColumn({
   columnId: TaskStatus;
   label: string;
   tasks: Task[];
+  allTasks: Task[];
   userId: string;
   members: TeamMembership[];
   onUpdate: () => Promise<void>;
@@ -375,15 +467,18 @@ function BoardColumn({
     <div ref={setNodeRef} className="min-h-[240px] rounded-lg bg-slate-100 p-3">
       <h3 className="mb-3 text-sm font-semibold">{label}</h3>
       <div className="space-y-2">
-        {tasks.map((task) => (
-          <TaskCard 
-            key={task.id} 
-            task={task} 
-            userId={userId} 
-            members={members}
-            onUpdate={onUpdate}
-          />
-        ))}
+        {tasks
+          .filter((task) => !task.parentTaskId || task.parentTaskId === null)
+          .map((task) => (
+            <TaskCard 
+              key={task.id} 
+              task={task} 
+              userId={userId} 
+              members={members}
+              allTasks={allTasks}
+              onUpdate={onUpdate}
+            />
+          ))}
       </div>
     </div>
   );
@@ -425,6 +520,7 @@ export function TaskBoard({
               columnId={column.id}
               label={column.label}
               tasks={tasks.filter((task) => task.status === column.id)}
+              allTasks={tasks}
               userId={userId}
               members={members}
               onUpdate={onUpdate}
