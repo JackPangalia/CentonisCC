@@ -5,6 +5,7 @@ import { useState } from "react";
 import { createGoal, deleteGoal, setGoalStatus, updateGoal } from "@/services/goalService";
 import type { Goal, Task, WorkspaceType } from "@/types/models";
 import { toast } from "sonner";
+import { Edit2, Trash2 } from "lucide-react";
 
 type GoalManagerProps = {
   workspaceType: WorkspaceType;
@@ -68,31 +69,35 @@ export function GoalManager({
         </h2>
       </div>
 
-      <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-2">
-        <input
-          className="flex-1 rounded-xl border border-zinc-200 bg-white/60 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-600 dark:focus:ring-zinc-600 transition-colors"
-          placeholder="New Goal Title..."
-          required
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-        />
-        <input
-          className="flex-1 rounded-xl border border-zinc-200 bg-white/60 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-600 dark:focus:ring-zinc-600 transition-colors"
-          placeholder="Description"
-          required
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-        />
-        <input
-          className="w-full sm:w-36 rounded-xl border border-zinc-200 bg-white/60 px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:focus:border-zinc-600 dark:focus:ring-zinc-600 transition-colors"
-          type="date"
-          required
-          value={dueDate}
-          onChange={(event) => setDueDate(event.target.value)}
-        />
-        <button className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-colors">
-          Add
-        </button>
+      <form onSubmit={handleCreate} className="flex flex-col gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            className="flex-1 rounded-xl border border-zinc-200 bg-white/60 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-600 dark:focus:ring-zinc-600 transition-colors"
+            placeholder="New Goal Title..."
+            required
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
+          <input
+            className="flex-1 rounded-xl border border-zinc-200 bg-white/60 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-600 dark:focus:ring-zinc-600 transition-colors"
+            placeholder="Description"
+            required
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+          />
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            className="flex-1 rounded-xl border border-zinc-200 bg-white/60 px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:focus:border-zinc-600 dark:focus:ring-zinc-600 transition-colors"
+            type="date"
+            required
+            value={dueDate}
+            onChange={(event) => setDueDate(event.target.value)}
+          />
+          <button className="sm:w-32 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-colors">
+            Add Goal
+          </button>
+        </div>
       </form>
 
       <div className="space-y-3 overflow-y-auto">
@@ -164,18 +169,18 @@ export function GoalManager({
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-2 items-end">
+                  <div className="flex flex-col gap-2 items-end relative">
                     <Link
                       href={`/goals/${goal.id}`}
                       className="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors"
                     >
                       Open Tasks
                     </Link>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       {goal.status !== "Completed" ? (
                         <button
                           type="button"
-                          className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-medium text-emerald-600 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-400 dark:hover:bg-emerald-500/10 transition-colors"
+                          className="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-medium text-emerald-600 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-400 dark:hover:bg-emerald-500/10 transition-colors"
                           onClick={() => void setGoalStatus(goal.id, "Completed").then(onRefresh)}
                         >
                           Mark Done
@@ -183,22 +188,24 @@ export function GoalManager({
                       ) : null}
                       <button
                         type="button"
-                        className="rounded-lg border border-zinc-200 bg-white px-3 py-1 text-[10px] font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors"
+                        className="rounded-lg border border-zinc-200 bg-white p-1.5 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors"
                         onClick={() => {
                           setEditingId(goal.id);
                           setEditTitle(goal.title);
                           setEditDescription(goal.description);
                           setEditDueDate(goal.dueDate);
                         }}
+                        title="Edit Goal"
                       >
-                        Edit
+                        <Edit2 className="h-3.5 w-3.5" />
                       </button>
                       <button
                         type="button"
-                        className="rounded-lg border border-red-200 bg-red-50 px-3 py-1 text-[10px] font-medium text-red-600 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/5 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors"
+                        className="rounded-lg border border-red-200 bg-red-50 p-1.5 text-red-600 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/5 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors"
                         onClick={() => void handleDelete(goal)}
+                        title="Delete Goal"
                       >
-                        Delete
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>

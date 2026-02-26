@@ -118,25 +118,25 @@ export function CreateTaskForm({
     return (
       <button
         onClick={() => setIsExpanded(true)}
-        className="w-full rounded-lg border-2 border-dashed border-slate-300 p-4 text-sm font-medium text-slate-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 transition-all flex items-center justify-center gap-2"
+        className="w-full rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-4 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all flex items-center justify-center gap-2"
       >
-        <span>➕</span> Add New Task <span className="text-xs font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">N</span>
+        <span>➕</span> Add New Task <span className="text-xs font-normal text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-lg border border-zinc-200 dark:border-zinc-700">N</span>
       </button>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 shadow-lg relative animate-in fade-in slide-in-from-top-2">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-zinc-200 bg-white/60 dark:bg-zinc-900/50 p-5 shadow-lg backdrop-blur-md relative animate-in fade-in slide-in-from-top-2 dark:border-zinc-800">
       {errorMessage && (
-        <p className="text-red-600 text-sm bg-red-50 p-2 rounded">{errorMessage}</p>
+        <p className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-500/10 p-2 rounded-lg">{errorMessage}</p>
       )}
       
       <div className="flex justify-between items-start">
-        <h3 className="text-sm font-semibold text-slate-700">New Task</h3>
+        <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">New Task</h3>
         <button 
           type="button" 
           onClick={() => setIsExpanded(false)}
-          className="text-slate-400 hover:text-slate-600"
+          className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
         >
           ✕
         </button>
@@ -146,7 +146,7 @@ export function CreateTaskForm({
         <div className="col-span-full sm:col-span-2">
            <input
             ref={titleInputRef}
-            className="w-full rounded border border-slate-300 p-2 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full rounded-xl border border-zinc-200 bg-white/60 dark:bg-zinc-900/50 p-2.5 text-sm font-medium text-zinc-900 dark:text-zinc-100 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:focus:border-zinc-500 dark:focus:ring-zinc-500 transition-colors"
             required
             placeholder="What needs to be done?"
             value={title}
@@ -156,7 +156,7 @@ export function CreateTaskForm({
         </div>
         <div className="col-span-full sm:col-span-1">
           <input
-            className="w-full rounded border border-slate-300 p-2 text-sm"
+            className="w-full rounded-xl border border-zinc-200 bg-white/60 dark:bg-zinc-900/50 p-2.5 text-sm text-zinc-900 dark:text-zinc-100 dark:border-zinc-700 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
             type="date"
             required
             value={dueDate}
@@ -167,7 +167,7 @@ export function CreateTaskForm({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <select
-          className="rounded border border-slate-300 p-2 text-sm bg-white"
+          className="rounded-xl border border-zinc-200 bg-white/60 dark:bg-zinc-900/50 p-2.5 text-sm text-zinc-900 dark:text-zinc-100 dark:border-zinc-700 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
           value={priority}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onChange={(e) => setPriority(e.target.value as any)}
@@ -179,7 +179,7 @@ export function CreateTaskForm({
         
         <input
           type="number"
-          className="rounded border border-slate-300 p-2 text-sm"
+          className="rounded-xl border border-zinc-200 bg-white/60 dark:bg-zinc-900/50 p-2.5 text-sm text-zinc-900 dark:text-zinc-100 dark:border-zinc-700 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
           placeholder="Est. Minutes"
           value={estimatedMinutes}
           onChange={(e) => setEstimatedMinutes(e.target.value)}
@@ -187,7 +187,7 @@ export function CreateTaskForm({
         
         {workspaceType === "team" && (
           <select
-            className="rounded border border-slate-300 p-2 text-sm bg-white"
+            className="rounded-xl border border-zinc-200 bg-white/60 dark:bg-zinc-900/50 p-2.5 text-sm text-zinc-900 dark:text-zinc-100 dark:border-zinc-700 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
             value={assigneeUserId}
             onChange={(event) => setAssigneeUserId(event.target.value)}
           >
@@ -202,7 +202,7 @@ export function CreateTaskForm({
       </div>
 
       <div>
-        <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Description</label>
+        <label className="text-xs font-semibold text-zinc-500 uppercase mb-1 block">Description</label>
         <RichTextEditor
           content={description}
           onChange={setDescription}
@@ -212,23 +212,23 @@ export function CreateTaskForm({
 
       {/* Tags Input */}
       <div>
-        <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Tags</label>
+        <label className="text-xs font-semibold text-zinc-500 uppercase mb-1 block">Tags</label>
         <input
           type="text"
-          className="w-full rounded border border-slate-300 p-2 text-sm"
+          className="w-full rounded-xl border border-zinc-200 bg-white/60 dark:bg-zinc-900/50 p-2.5 text-sm text-zinc-900 dark:text-zinc-100 dark:border-zinc-700 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
           placeholder="Enter tags separated by commas (e.g., frontend, urgent, bug)"
           value={tags}
           onChange={(e) => setTags(e.target.value)}
         />
-        <p className="mt-1 text-xs text-slate-400">Separate multiple tags with commas</p>
+        <p className="mt-1 text-xs text-zinc-400">Separate multiple tags with commas</p>
       </div>
 
       {/* Parent Task Selector */}
       {availableParentTasks.length > 0 && (
         <div>
-          <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Parent Task (Optional)</label>
+          <label className="text-xs font-semibold text-zinc-500 uppercase mb-1 block">Parent Task (Optional)</label>
           <select
-            className="w-full rounded border border-slate-300 p-2 text-sm bg-white"
+            className="w-full rounded-xl border border-zinc-200 bg-white/60 dark:bg-zinc-900/50 p-2.5 text-sm text-zinc-900 dark:text-zinc-100 dark:border-zinc-700 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
             value={parentTaskId}
             onChange={(e) => setParentTaskId(e.target.value)}
           >
@@ -245,25 +245,25 @@ export function CreateTaskForm({
       {/* Dependencies Selector */}
       {availableDependencyTasks.length > 0 && (
         <div>
-          <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Blocked By (Dependencies)</label>
-          <div className="max-h-32 overflow-y-auto rounded border border-slate-300 bg-white p-2 space-y-1">
+          <label className="text-xs font-semibold text-zinc-500 uppercase mb-1 block">Blocked By (Dependencies)</label>
+          <div className="max-h-32 overflow-y-auto rounded-xl border border-zinc-200 bg-white/60 dark:bg-zinc-900/50 p-2 space-y-1 dark:border-zinc-700">
             {availableDependencyTasks.map((task) => (
               <label
                 key={task.id}
-                className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded"
+                className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 p-1 rounded-lg transition-colors"
               >
                 <input
                   type="checkbox"
                   checked={blockedByTaskIds.includes(task.id)}
                   onChange={() => toggleDependency(task.id)}
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-800"
                 />
                 <span className="truncate">{task.title}</span>
               </label>
             ))}
           </div>
           {blockedByTaskIds.length > 0 && (
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-zinc-500">
               This task will be blocked until {blockedByTaskIds.length} task(s) are completed
             </p>
           )}
@@ -274,13 +274,13 @@ export function CreateTaskForm({
         <button 
           type="button"
           onClick={() => setIsExpanded(false)}
-          className="rounded px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          className="rounded-xl px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors"
         >
           Cancel
         </button>
         <button 
           type="submit"
-          className="rounded bg-slate-900 px-6 py-2 text-sm font-medium text-white hover:bg-slate-800 shadow-sm"
+          className="rounded-xl bg-zinc-900 px-6 py-2 text-sm font-medium text-white hover:bg-zinc-800 shadow-sm dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-colors"
         >
           Create Task
         </button>

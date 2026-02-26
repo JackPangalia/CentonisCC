@@ -101,6 +101,15 @@ export interface Note {
   userId: string;
   title: string;
   content: string; // TipTap JSON as string
+  folderId?: string | null; // Optional reference to a folder
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NoteFolder {
+  id: string;
+  userId: string;
+  name: string;
   createdAt: string;
   updatedAt: string;
 }

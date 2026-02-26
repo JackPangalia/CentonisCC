@@ -1,7 +1,7 @@
 "use client";
 
-import type { Task, TeamMembership } from "@/types/models";
 import { updateTask, deleteTask, isTaskBlocked } from "@/services/taskService";
+import { Trash2 } from "lucide-react";
 
 type TaskListViewProps = {
   tasks: Task[];
@@ -66,21 +66,21 @@ export function TaskListView({ tasks, members, onUpdate }: TaskListViewProps) {
   });
 
   const statusColors = {
-    todo: "bg-slate-100 text-slate-700",
-    in_progress: "bg-blue-100 text-blue-700",
-    done: "bg-emerald-100 text-emerald-700",
+    todo: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+    in_progress: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
+    done: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
   };
 
   const priorityColors = {
-    low: "text-slate-500",
-    medium: "text-blue-600",
-    high: "text-red-600 font-medium",
+    low: "text-zinc-500 dark:text-zinc-400",
+    medium: "text-blue-600 dark:text-blue-400",
+    high: "text-red-600 dark:text-red-400 font-medium",
   };
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white/60 dark:bg-zinc-900/50 shadow-sm backdrop-blur-md dark:border-zinc-800">
       <table className="w-full text-left text-sm">
-        <thead className="bg-slate-50 text-slate-500">
+        <thead className="bg-zinc-50/50 text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400">
           <tr>
             <th className="px-4 py-3 font-medium">Title</th>
             <th className="px-4 py-3 font-medium">Status</th>
@@ -92,7 +92,7 @@ export function TaskListView({ tasks, members, onUpdate }: TaskListViewProps) {
             <th className="px-4 py-3 font-medium text-right">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
           {sortedTasks.map((task) => {
             const assignee = members.find((m) => m.userId === task.assigneeUserId);
             const taskIsSubtask = isSubtask(task);
@@ -102,18 +102,18 @@ export function TaskListView({ tasks, members, onUpdate }: TaskListViewProps) {
             return (
               <tr 
                 key={task.id} 
-                className={`hover:bg-slate-50/50 transition-colors group ${
-                  taskIsSubtask ? "bg-slate-50/30" : ""
+                className={`hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors group ${
+                  taskIsSubtask ? "bg-zinc-50/30 dark:bg-zinc-800/10" : ""
                 } ${isBlocked ? "opacity-60" : ""}`}
               >
-                <td className="px-4 py-3 font-medium text-slate-800">
+                <td className="px-4 py-3 font-medium text-zinc-800 dark:text-zinc-200">
                   <div className="flex items-center gap-2">
                     {taskIsSubtask && (
-                      <span className="text-slate-400" title="Subtask">└</span>
+                      <span className="text-zinc-400 dark:text-zinc-600" title="Subtask">└</span>
                     )}
                     <span>{task.title}</span>
                     {taskIsSubtask && (
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-zinc-400 dark:text-zinc-600">
                         (of {getParentTask(task)?.title || "Unknown"})
                       </span>
                     )}
@@ -123,7 +123,7 @@ export function TaskListView({ tasks, members, onUpdate }: TaskListViewProps) {
                   <select
                     value={task.status}
                     onChange={(e) => handleStatusChange(task, e.target.value)}
-                    className={`rounded px-2 py-1 text-xs font-medium border-0 cursor-pointer outline-none ${statusColors[task.status]}`}
+                    className={`rounded-lg px-2 py-1 text-xs font-medium border-0 cursor-pointer outline-none transition-colors ${statusColors[task.status]}`}
                   >
                     <option value="todo">To Do</option>
                     <option value="in_progress">In Progress</option>
@@ -141,14 +141,14 @@ export function TaskListView({ tasks, members, onUpdate }: TaskListViewProps) {
                       {task.tags.map((tag, idx) => (
                         <span
                           key={idx}
-                          className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700 border border-emerald-200"
+                          className="rounded-md bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/50"
                         >
-                          {tag}
+                          #{tag}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <span className="text-slate-400">-</span>
+                    <span className="text-zinc-400 dark:text-zinc-600">-</span>
                   )}
                 </td>
                 <td className="px-4 py-3">
@@ -157,7 +157,7 @@ export function TaskListView({ tasks, members, onUpdate }: TaskListViewProps) {
                       {blockingTaskNames.map((name, idx) => (
                         <div
                           key={idx}
-                          className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 inline-block"
+                          className="text-xs text-amber-700 dark:text-amber-500 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded px-1.5 py-0.5 inline-block"
                           title="Blocked by"
                         >
                           ⚠️ {name}
@@ -165,21 +165,22 @@ export function TaskListView({ tasks, members, onUpdate }: TaskListViewProps) {
                       ))}
                     </div>
                   ) : (
-                    <span className="text-slate-400">-</span>
+                    <span className="text-zinc-400 dark:text-zinc-600">-</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-slate-500">
+                <td className="px-4 py-3 text-zinc-500 dark:text-zinc-400">
                   {task.dueDate ? new Date(task.dueDate + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : "-"}
                 </td>
-                <td className="px-4 py-3 text-slate-500">
+                <td className="px-4 py-3 text-zinc-500 dark:text-zinc-400">
                   {assignee ? (assignee.userEmail || "Member") : "-"}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <button
                     onClick={() => handleDelete(task.id)}
-                    className="text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity px-2"
+                    className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center ml-auto"
+                    title="Delete task"
                   >
-                    Delete
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </td>
               </tr>
@@ -187,7 +188,7 @@ export function TaskListView({ tasks, members, onUpdate }: TaskListViewProps) {
           })}
           {sortedTasks.length === 0 && (
             <tr>
-              <td colSpan={8} className="px-4 py-8 text-center text-slate-400 italic">
+              <td colSpan={8} className="px-4 py-8 text-center text-zinc-400 dark:text-zinc-500 italic">
                 No tasks found.
               </td>
             </tr>

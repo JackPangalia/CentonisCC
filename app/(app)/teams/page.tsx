@@ -6,26 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { createTeam, getTeamsForUser, deleteTeam } from "@/services/teamService";
 import type { Team } from "@/types/models";
-
-function TrashIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    </svg>
-  );
-}
+import { Trash2 } from "lucide-react";
 
 export default function TeamsPage() {
   const { user, isLoading } = useAuth();
@@ -95,21 +76,25 @@ export default function TeamsPage() {
   }
 
   if (isLoading || !user) {
-    return <p className="text-sm text-slate-600">Loading teams...</p>;
+    return <p className="text-sm text-zinc-400">Loading teams...</p>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-12">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Teams</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          Teams
+        </h1>
       </div>
 
       {/* Create Team Section */}
-      <section className="rounded-lg bg-white p-4 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold">Create New Team</h2>
-        <form onSubmit={handleCreateTeam} className="space-y-3">
+      <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/40 p-5 shadow-sm backdrop-blur-md space-y-4">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          Create New Team
+        </h2>
+        <form onSubmit={handleCreateTeam} className="flex flex-col sm:flex-row gap-3">
           <input
-            className="w-full rounded border border-slate-300 p-2"
+            className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/50 px-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-600"
             value={newTeamName}
             onChange={(event) => setNewTeamName(event.target.value)}
             required
@@ -119,17 +104,17 @@ export default function TeamsPage() {
           <button
             type="submit"
             disabled={isCreating}
-            className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="sm:w-32 rounded-xl bg-zinc-900 dark:bg-zinc-100 px-4 py-2.5 text-sm font-medium text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isCreating ? "Creating..." : "Create Team"}
           </button>
         </form>
         {message ? (
           <p
-            className={`mt-3 text-sm font-medium ${
+            className={`mt-2 text-sm font-medium ${
               message.includes("successfully")
-                ? "text-emerald-700"
-                : "text-red-600"
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-red-600 dark:text-red-400"
             }`}
           >
             {message}
@@ -138,12 +123,12 @@ export default function TeamsPage() {
       </section>
 
       {/* Teams List */}
-      <section className="rounded-lg bg-white p-4 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold">
+      <section className="space-y-4">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
           Your Teams ({teams.length})
         </h2>
         {teams.length === 0 ? (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
             You don&apos;t belong to any teams yet. Create one above to get started!
           </p>
         ) : (
@@ -151,15 +136,15 @@ export default function TeamsPage() {
             {teams.map((team) => (
               <div
                 key={team.id}
-                className="group relative rounded-lg border border-slate-200 bg-slate-50 p-4 transition-all hover:border-blue-500 hover:shadow-md"
+                className="group relative flex flex-col justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white/60 dark:bg-zinc-900/30 p-5 transition-all hover:bg-white/80 dark:hover:bg-zinc-800/30 hover:border-zinc-300 dark:hover:border-zinc-700/80 hover:shadow-md"
               >
                 {user.uid === team.ownerUserId && (
                   <button
                     onClick={(e) => handleDeleteTeam(e, team.id)}
-                    className="absolute right-2 top-2 z-10 rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                    className="absolute right-3 top-3 z-10 rounded p-1.5 text-zinc-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors flex items-center justify-center"
                     title="Delete Team"
                   >
-                    <TrashIcon />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 )}
 
@@ -167,13 +152,13 @@ export default function TeamsPage() {
                   href={`/teams/${team.id}`}
                   className="block h-full w-full pt-4"
                 >
-                  <h3 className="mb-2 font-semibold text-slate-900 group-hover:text-blue-700">
+                  <h3 className="mb-2 font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-700 dark:group-hover:text-zinc-300">
                     {team.name}
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
                     Created {new Date(team.createdAt).toLocaleDateString()}
                   </p>
-                  <p className="mt-2 text-sm text-blue-600 group-hover:underline">
+                  <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300 group-hover:underline">
                     Open workspace →
                   </p>
                 </Link>

@@ -73,11 +73,11 @@ export default function TeamDashboardPage() {
       </div>
       
       <BentoGrid className="md:auto-rows-auto gap-6">
-        <div className="md:col-span-3">
+        <div className="md:col-span-4">
           <SummaryCards summary={workspace.summary} />
         </div>
         
-        <SpotlightCard className="md:col-span-2 p-0 flex flex-col h-[550px] overflow-hidden">
+        <SpotlightCard className="md:col-span-3 p-0 flex flex-col h-[600px] overflow-hidden">
           <div className="h-full overflow-hidden p-1">
             <GoalManager
               workspaceType="team"
@@ -89,7 +89,7 @@ export default function TeamDashboardPage() {
           </div>
         </SpotlightCard>
 
-        <SpotlightCard className="md:col-span-1 p-0 flex flex-col h-[550px] overflow-hidden">
+        <SpotlightCard className="md:col-span-1 p-0 flex flex-col h-[600px] overflow-hidden">
           <div className="h-full overflow-hidden p-4">
             <TeamManager
               userId={user.uid}

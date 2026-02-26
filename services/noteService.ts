@@ -11,18 +11,19 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { Note } from "@/types/models";
+import type { Note, NoteFolder } from "@/types/models";
 
 function nowIso(): string {
   return new Date().toISOString();
 }
 
-export async function createNote(userId: string): Promise<string> {
+export async function createNote(userId: string, folderId: string | null = null): Promise<string> {
   const timestamp = nowIso();
   const payload: Omit<Note, "id"> = {
     userId,
     title: "Untitled",
     content: "",
+    folderId,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -49,7 +50,7 @@ export async function getNoteById(noteId: string): Promise<Note | null> {
 
 export async function updateNote(
   noteId: string,
-  data: Partial<Pick<Note, "title" | "content">>
+  data: Partial<Pick<Note, "title" | "content" | "folderId">>
 ) {
   await updateDoc(doc(db, "notes", noteId), {
     ...data,
@@ -59,4 +60,54 @@ export async function updateNote(
 
 export async function deleteNote(noteId: string) {
   await deleteDoc(doc(db, "notes", noteId));
+}
+
+// Folder CRUD Operations
+
+export async function createFolder(userId: string, name: string): Promise<string> {
+  const timestamp = nowIso();
+  const payload = {
+    userId,
+    name,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+  const docRef = await addDoc(collection(db, "noteFolders"), payload);
+  return docRef.id;
+}
+
+export async function listFolders(userId: string): Promise<NoteFolder[]> {
+  const snapshot = await getDocs(
+    query(collection(db, "noteFolders"), where("userId", "==", userId))
+  );
+  return snapshot.docs.map(
+    (item) => ({ id: item.id, ...item.data() } as NoteFolder)
+  );
+}
+
+export async function updateFolder(folderId: string, name: string) {
+  await updateDoc(doc(db, "noteFolders", folderId), {
+    name,
+    updatedAt: nowIso(),
+  });
+}
+
+export async function deleteFolder(folderId: string, userId: string) {
+  // Fetch only this user's notes, then clear folder references locally.
+  // This avoids permission failures from touching notes not owned by requester.
+  const notesSnapshot = await getDocs(
+    query(collection(db, "notes"), where("userId", "==", userId))
+  );
+
+  const notesInFolder = notesSnapshot.docs.filter(
+    (noteDoc) => noteDoc.data().folderId === folderId
+  );
+
+  const updatePromises = notesInFolder.map((noteDoc) =>
+    updateDoc(doc(db, "notes", noteDoc.id), { folderId: null })
+  );
+  await Promise.all(updatePromises);
+
+  // Delete the folder
+  await deleteDoc(doc(db, "noteFolders", folderId));
 }

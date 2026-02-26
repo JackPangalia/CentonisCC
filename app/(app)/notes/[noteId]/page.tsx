@@ -47,11 +47,12 @@ export default function NotePage() {
     }
   }, [isLoading, user, loadNote]);
 
+  const isMounted = useRef(true);
   useEffect(() => {
     return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
+      isMounted.current = false;
+      // We intentionally do NOT clear the timeout here, 
+      // so if they click back/close before 2s, it still saves in the background.
     };
   }, []);
 
@@ -64,14 +65,15 @@ export default function NotePage() {
 
     saveTimeoutRef.current = setTimeout(async () => {
       try {
-        setIsSaving(true);
+        if (isMounted.current) setIsSaving(true);
         await updateNote(noteId, { content, title });
       } catch (error) {
         console.error("Failed to save note:", error);
+        toast.error(`Error saving note: ${(error as Error)?.message || "Unknown error"}`);
       } finally {
-        setIsSaving(false);
+        if (isMounted.current) setIsSaving(false);
       }
-    }, 2000); // Save 2 seconds after typing stops
+    }, 1500); // Save 1.5 seconds after typing stops
   }, [noteId, note]);
 
   function handleContentChange(content: string) {
@@ -100,7 +102,14 @@ export default function NotePage() {
       {/* Fixed Header Controls (Title + Back) */}
       <div className="fixed top-4 left-4 z-50 flex items-center gap-3 pointer-events-auto">
         <button
-          onClick={() => router.push("/notes")}
+          onClick={() => {
+            // Force save immediately if leaving early
+            if (saveTimeoutRef.current && note) {
+              clearTimeout(saveTimeoutRef.current);
+              void updateNote(noteId as string, { content: note.content, title: note.title });
+            }
+            router.push("/notes");
+          }}
           className="group flex items-center justify-center w-9 h-9 rounded-full bg-white/50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-all backdrop-blur-md shadow-sm"
           title="Back to notes"
         >

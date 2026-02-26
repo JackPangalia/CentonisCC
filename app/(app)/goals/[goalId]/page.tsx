@@ -122,29 +122,33 @@ export default function GoalTasksPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Section */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-             <h1 className="text-3xl font-bold tracking-tight text-slate-900">{goal.title}</h1>
-             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-               goal.workspaceType === 'personal' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-             }`}>
-               {goal.workspaceType === 'personal' ? 'Personal' : 'Team'}
-             </span>
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between mb-8">
+        <div className="space-y-4">
+          <div className="space-y-2">
+             <div className="flex items-center gap-3">
+               <span className={`px-2.5 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider border ${
+                 goal.workspaceType === 'personal' 
+                   ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20' 
+                   : 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20'
+               }`}>
+                 {goal.workspaceType === 'personal' ? 'Personal' : 'Team'}
+               </span>
+               <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">{goal.title}</h1>
+             </div>
+             <p className="text-zinc-500 dark:text-zinc-400 max-w-2xl text-lg leading-relaxed">{goal.description}</p>
           </div>
-          <p className="text-slate-600 max-w-2xl text-lg">{goal.description}</p>
           
           {/* Progress Bar */}
-          <div className="flex items-center gap-3 pt-2">
-            <div className="h-2.5 w-48 rounded-full bg-slate-100 overflow-hidden">
+          <div className="flex items-center gap-4 pt-2">
+            <div className="h-2 w-48 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
               <div 
-                className="h-full bg-blue-600 transition-all duration-500 ease-out"
+                className="h-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-700 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <span className="text-sm font-medium text-slate-700">{progress}% Complete</span>
+            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">{progress}% Complete</span>
             {progress === 100 && (
-              <button onClick={triggerConfetti} className="text-xl animate-bounce" title="Celebrate!">
+              <button onClick={triggerConfetti} className="text-xl animate-bounce hover:scale-110 transition-transform" title="Celebrate!">
                 🎉
               </button>
             )}
@@ -154,7 +158,7 @@ export default function GoalTasksPage() {
         <div className="flex items-center gap-3">
            <Link
             href={goal.workspaceType === "personal" ? "/dashboard" : `/teams/${goal.workspaceId}`}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 transition-colors bg-white text-slate-700 shadow-sm"
+            className="rounded-xl border border-zinc-200 bg-white/50 px-4 py-2 text-sm font-medium hover:bg-white hover:border-zinc-300 transition-all text-zinc-700 shadow-sm dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:border-zinc-700 backdrop-blur-sm"
           >
             ← Back
           </Link>
@@ -162,15 +166,15 @@ export default function GoalTasksPage() {
       </div>
 
       {/* View Switcher & Controls */}
-      <div className="border-b border-slate-200">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+        <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-xl">
           <button
             onClick={() => setView("board")}
             className={`${
               view === "board"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
-            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors flex items-center gap-2`}
+                ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm"
+                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+            } px-4 py-2 text-sm font-medium transition-all rounded-lg flex items-center gap-2`}
           >
             <span>📋</span> Board
           </button>
@@ -178,9 +182,9 @@ export default function GoalTasksPage() {
             onClick={() => setView("list")}
             className={`${
               view === "list"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
-            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors flex items-center gap-2`}
+                ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm"
+                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+            } px-4 py-2 text-sm font-medium transition-all rounded-lg flex items-center gap-2`}
           >
             <span>📝</span> List
           </button>
@@ -188,13 +192,13 @@ export default function GoalTasksPage() {
             onClick={() => setView("calendar")}
             className={`${
               view === "calendar"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
-            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors flex items-center gap-2`}
+                ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm"
+                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+            } px-4 py-2 text-sm font-medium transition-all rounded-lg flex items-center gap-2`}
           >
             <span>📅</span> Calendar
           </button>
-        </nav>
+        </div>
       </div>
 
       {/* Filter Bar */}

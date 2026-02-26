@@ -12,6 +12,7 @@ import { deleteTask, moveTask, updateTask, getSubtasks, isTaskBlocked } from "@/
 import type { Task, TaskStatus, WorkspaceType, TeamMembership } from "@/types/models";
 import { TaskComments } from "@/components/tasks/TaskComments";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
+import { Edit2, Trash2, Clock, User, CheckCircle2, AlertCircle, ArrowRight, CornerDownRight, Calendar } from "lucide-react";
 
 type TaskBoardProps = {
   tasks: Task[];
@@ -267,15 +268,15 @@ function TaskCard({
       <article
         ref={setNodeRef}
         style={style}
-        className={`group space-y-2 rounded-xl border bg-white/60 dark:bg-zinc-900/40 p-3 shadow-sm backdrop-blur-sm transition-all hover:bg-white/80 dark:hover:bg-zinc-800/40 hover:border-zinc-300 dark:hover:border-zinc-700/80 ${
-          task.priority === "high" ? "border-l-2 border-l-red-500/50" : "border-zinc-200 dark:border-zinc-800/80"
-        } ${isOverdue ? "border-red-400 bg-red-50 dark:border-red-500/30 dark:bg-red-500/5" : ""} ${blocked ? "opacity-50" : ""}`}
+        className={`group space-y-3 rounded-xl border bg-white/70 dark:bg-zinc-900/60 p-4 shadow-sm backdrop-blur-md transition-all hover:bg-white/90 dark:hover:bg-zinc-900/80 hover:border-zinc-300 dark:hover:border-zinc-700/80 hover:shadow-md ${
+          task.priority === "high" ? "border-l-4 border-l-red-500/50" : "border-zinc-200 dark:border-zinc-800/80"
+        } ${isOverdue ? "border-red-400/50 bg-red-50/50 dark:border-red-500/30 dark:bg-red-500/5" : ""} ${blocked ? "opacity-50 grayscale-[0.5]" : ""}`}
       >
       {/* Header: Title (draggable & inline editable) */}
       {isTitleEditing ? (
         <input
           autoFocus
-          className="w-full rounded border-zinc-400 dark:border-zinc-500 border bg-white dark:bg-zinc-800 p-1 text-sm font-medium text-zinc-900 dark:text-zinc-100 outline-none"
+          className="w-full rounded-lg border-zinc-200 dark:border-zinc-700 border bg-white dark:bg-zinc-800 p-1.5 text-sm font-medium text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-blue-500/20"
           value={editTitle}
           onChange={(e) => setEditTitle(e.target.value)}
           onBlur={handleTitleSave}
@@ -294,18 +295,18 @@ function TaskCard({
               <button
                 type="button"
                 onClick={() => setIsSubtasksExpanded(!isSubtasksExpanded)}
-                className="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 mt-0.5"
+                className="text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 mt-0.5 transition-colors"
                 title={isSubtasksExpanded ? "Collapse subtasks" : "Expand subtasks"}
               >
-                {isSubtasksExpanded ? "▼" : "▶"}
+                {isSubtasksExpanded ? <CornerDownRight className="h-3.5 w-3.5" /> : <ArrowRight className="h-3.5 w-3.5" />}
               </button>
             )}
             {isSubtask && (
-              <span className="text-xs text-zinc-400 dark:text-zinc-600 mt-1" title="Subtask">└</span>
+              <CornerDownRight className="h-3.5 w-3.5 text-zinc-300 dark:text-zinc-700 mt-1" />
             )}
             <button
               type="button"
-              className="flex-1 cursor-grab text-left text-sm font-semibold text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-100 active:cursor-grabbing transition-colors"
+              className="flex-1 cursor-grab text-left text-sm font-semibold text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-zinc-100 active:cursor-grabbing transition-colors line-clamp-2 leading-tight"
               onClick={(e) => {
                 // Only edit if not dragging
                 if (e.detail === 1) {
@@ -321,17 +322,17 @@ function TaskCard({
           <div className="flex opacity-0 group-hover:opacity-100 transition-opacity gap-1">
             <button
               onClick={() => setIsEditing(true)}
-              className="text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-300 p-1 rounded-lg transition-colors"
+              className="text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-200 p-1.5 rounded-lg transition-colors flex items-center justify-center"
               title="Edit details"
             >
-              ✏️
+              <Edit2 className="h-3 w-3" />
             </button>
             <button
               onClick={() => void handleDelete()}
-              className="text-zinc-500 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 p-1 rounded-lg transition-colors"
+              className="text-zinc-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 p-1.5 rounded-lg transition-colors flex items-center justify-center"
               title="Delete task"
             >
-              🗑️
+              <Trash2 className="h-3 w-3" />
             </button>
           </div>
         </div>
@@ -340,20 +341,20 @@ function TaskCard({
       {/* Description */}
       {task.description ? (
         <div 
-          className="text-xs text-zinc-400 line-clamp-3 prose prose-invert prose-sm max-w-none"
+          className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 prose prose-invert prose-sm max-w-none leading-relaxed"
           dangerouslySetInnerHTML={{ __html: task.description }}
         />
       ) : null}
 
       {/* Tags */}
       {task.tags && task.tags.length > 0 && (
-        <div className="flex items-center gap-1 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {task.tags.map((tag, idx) => (
             <span
               key={idx}
-              className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400 border border-emerald-500/20"
+              className="rounded-md bg-zinc-100 dark:bg-zinc-800/50 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/50"
             >
-              {tag}
+              #{tag}
             </span>
           ))}
         </div>
@@ -361,55 +362,56 @@ function TaskCard({
 
       {/* Blocked Indicator */}
       {blocked && blockingTasks.length > 0 && (
-        <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-2 py-1 text-xs text-amber-500">
-          <span className="font-semibold">⚠️ Blocked by:</span>{" "}
-          {blockingTasks.map((bt) => bt.title).join(", ")}
+        <div className="rounded-lg bg-amber-500/5 border border-amber-500/10 px-2 py-1.5 text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1.5">
+          <AlertCircle className="h-3 w-3" />
+          <span className="font-semibold">Blocked by:</span>{" "}
+          <span className="truncate max-w-[150px]">{blockingTasks.map((bt) => bt.title).join(", ")}</span>
         </div>
       )}
 
       {/* Subtask Progress */}
       {subtasks.length > 0 && (
-        <div className="space-y-1 mt-2">
+        <div className="space-y-1.5 mt-2">
           <div className="flex items-center justify-between text-[10px] text-zinc-500 font-medium uppercase tracking-wider">
-            <span>
-              📋 {completedSubtasks}/{subtasks.length}
+            <span className="flex items-center gap-1">
+              <CheckCircle2 className="h-3 w-3" /> {completedSubtasks}/{subtasks.length}
             </span>
             <span>{subtaskProgress}%</span>
           </div>
-          <div className="h-1 w-full rounded-full bg-zinc-800 overflow-hidden">
+          <div className="h-1 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
             <div
-              className="h-full bg-zinc-400 transition-all"
+              className="h-full bg-zinc-400 dark:bg-zinc-600 transition-all rounded-full"
               style={{ width: `${subtaskProgress}%` }}
             />
           </div>
         </div>
       )}
 
-      {/* Metadata Row: Priority & Time */}
-      <div className="flex items-center gap-2 flex-wrap mt-2">
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${priorityColors[task.priority || "medium"]}`}>
-          {task.priority || "medium"}
-        </span>
-        {task.estimatedMinutes ? (
-          <span className="rounded-full bg-zinc-800/50 px-2 py-0.5 text-[10px] text-zinc-400 border border-zinc-700/50 font-medium">
-            ⏱ {task.actualMinutes || 0}/{task.estimatedMinutes}m
+      <div className="flex items-center justify-between pt-1 border-t border-zinc-100 dark:border-zinc-800/50 mt-1">
+        {/* Metadata Row: Priority & Time */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${priorityColors[task.priority || "medium"]}`}>
+            {task.priority || "medium"}
           </span>
-        ) : null}
-        {isOverdue && (
-          <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500 border border-red-500/20">
-            Overdue
-          </span>
-        )}
-      </div>
+          {task.estimatedMinutes ? (
+            <span className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
+              <Clock className="h-3 w-3" /> {task.actualMinutes || 0}/{task.estimatedMinutes}m
+            </span>
+          ) : null}
+        </div>
 
-      {/* Details Row: Due Date & Assignee */}
-      <div className="flex items-center justify-between text-[10px] font-medium uppercase tracking-wider text-zinc-500 mt-2">
-        <span className={isOverdue ? "text-red-400 font-bold" : ""}>
-          Due: {new Date(task.dueDate + 'T12:00:00').toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-        </span>
-        {task.workspaceType === "team" && (
-          <span className="text-zinc-600">👤 {assigneeLabel}</span>
-        )}
+        {/* Details Row: Due Date & Assignee */}
+        <div className="flex items-center gap-3 text-[10px] font-medium text-zinc-500">
+          <span className={`flex items-center gap-1 ${isOverdue ? "text-red-500 font-bold" : ""}`}>
+            <Calendar className="h-3 w-3" />
+            {new Date(task.dueDate + 'T12:00:00').toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+          </span>
+          {task.workspaceType === "team" && (
+            <span className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400" title={assigneeLabel}>
+              <User className="h-3 w-3" /> 
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Actions: Edit & Delete buttons (Removed - moved to hover) */}
@@ -464,9 +466,19 @@ function BoardColumn({
   const { setNodeRef } = useDroppable({ id: columnId });
 
   return (
-    <div ref={setNodeRef} className="min-h-[240px] rounded-2xl bg-zinc-100/50 dark:bg-zinc-900/30 border border-zinc-200/80 dark:border-zinc-800/80 p-3">
-      <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-zinc-500 px-1">{label}</h3>
-      <div className="space-y-3">
+    <div ref={setNodeRef} className="min-h-[240px] rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/20 border border-zinc-200/60 dark:border-zinc-800/60 p-3 flex flex-col gap-3">
+      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 px-1 flex items-center gap-2">
+        <span className={`w-2 h-2 rounded-full ${
+          columnId === 'todo' ? 'bg-zinc-400' : 
+          columnId === 'in_progress' ? 'bg-blue-400' : 
+          'bg-emerald-400'
+        }`} />
+        {label}
+        <span className="ml-auto bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+          {tasks.length}
+        </span>
+      </h3>
+      <div className="space-y-3 flex-1">
         {tasks
           .filter((task) => !task.parentTaskId || task.parentTaskId === null)
           .map((task) => (
@@ -479,6 +491,11 @@ function BoardColumn({
               onUpdate={onUpdate}
             />
           ))}
+          {tasks.length === 0 && (
+            <div className="h-24 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-center text-zinc-400 text-xs italic">
+              Empty
+            </div>
+          )}
       </div>
     </div>
   );
@@ -506,7 +523,7 @@ export function TaskBoard({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-          <span>📋</span> Board
+          <span className="text-xl">📋</span> Board
         </h2>
       </div>
       {errorMessage ? (
