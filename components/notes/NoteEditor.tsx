@@ -10,9 +10,14 @@ import TextAlign from "@tiptap/extension-text-align";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
-import TaskList from '@tiptap/extension-task-list'
-import TaskItem from '@tiptap/extension-task-item'
-import { useState } from "react";
+import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
+import { useCallback, useEffect, useRef, useState } from "react";
+import EntityMentionExtension from "@/lib/tiptap/extensions/EntityMentionExtension";
+import type { EntityMentionItem } from "@/components/mentions/EntityMentionList";
+import { useAuth } from "@/hooks/useAuth";
+import { listNotes } from "@/services/noteService";
+import { listGoals } from "@/services/goalService";
 
 type NoteEditorProps = {
   content: string;
@@ -58,6 +63,75 @@ const KEYBOARD_SHORTCUTS = [
 
 export function NoteEditor({ content, onChange, onTitleChange }: NoteEditorProps) {
   const [showLegend, setShowLegend] = useState(false);
+  const { user } = useAuth();
+
+  const mentionItemsRef = useRef<EntityMentionItem[]>([]);
+
+  // Fetch linkable items for [[Title]] mentions (notes + personal goals)
+  useEffect(() => {
+    if (!user) return;
+
+    let isMounted = true;
+
+    async function fetchItems() {
+      const items: EntityMentionItem[] = [];
+
+      try {
+        const notes = await listNotes(user.uid);
+        if (isMounted) {
+          notes.forEach((note) => {
+            if (note.title) {
+              items.push({
+                id: note.id,
+                label: note.title,
+                href: `/notes/${note.id}`,
+                type: "note",
+              });
+            }
+          });
+        }
+      } catch (e) {
+        console.error("Failed to fetch notes for linking", e);
+      }
+
+      try {
+        const goals = await listGoals("personal", user.uid);
+        if (isMounted) {
+          goals.forEach((goal) => {
+            if (goal.title) {
+              items.push({
+                id: goal.id,
+                label: goal.title,
+                href: `/goals/${goal.id}`,
+                type: "goal",
+              });
+            }
+          });
+        }
+      } catch (e) {
+        console.error("Failed to fetch goals for linking", e);
+      }
+
+      if (isMounted) {
+        mentionItemsRef.current = items;
+      }
+    }
+
+    void fetchItems();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
+  const getMentionItems = useCallback((query: string) => {
+    const all = mentionItemsRef.current;
+    if (!query) return all.slice(0, 20);
+    const lower = query.toLowerCase();
+    return all
+      .filter((item) => item.label.toLowerCase().includes(lower))
+      .slice(0, 20);
+  }, []);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -68,12 +142,16 @@ export function NoteEditor({ content, onChange, onTitleChange }: NoteEditorProps
         // HorizontalRule, ListItem, OrderedList, Paragraph, Text, 
         // Bold, Code, Italic, Strike, Dropcursor, Gapcursor, History
         heading: { levels: [1, 2, 3, 4, 5, 6] },
+        // We provide dedicated Link and Underline extensions below,
+        // so we disable any built-in versions to avoid duplicate names.
+        link: false,
+        underline: false,
       }),
       Typography,
       Underline,
       Highlight,
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
+        types: ["heading", "paragraph"],
       }),
       Link.configure({
         openOnClick: false,
@@ -85,6 +163,9 @@ export function NoteEditor({ content, onChange, onTitleChange }: NoteEditorProps
       }),
       Placeholder.configure({
         placeholder: "Start typing...",
+      }),
+      EntityMentionExtension.configure({
+        getItems: getMentionItems,
       }),
     ],
     content,

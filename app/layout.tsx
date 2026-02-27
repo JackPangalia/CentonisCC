@@ -16,7 +16,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${GeistSans.className} min-h-screen antialiased selection:bg-blue-200 selection:text-blue-900 dark:selection:bg-blue-900/50 dark:selection:text-blue-100`}>
+      <body
+        className={[
+          GeistSans.className,
+          "min-h-screen antialiased selection:bg-blue-200 selection:text-blue-900 dark:selection:bg-blue-900/50 dark:selection:text-blue-100",
+        ].join(" ")}
+      >
         <AppProviders>{children}</AppProviders>
       </body>
     </html>
