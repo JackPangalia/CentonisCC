@@ -268,7 +268,7 @@ function SolutionSection() {
 function AppPreview() {
   return (
     <section className="border-t border-zinc-100 bg-zinc-50/50 px-6 py-24">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-7xl">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -299,16 +299,16 @@ function AppPreview() {
           variants={fadeUp}
           custom={1}
           className="relative mt-12 mx-auto"
-          style={{ height: "clamp(400px, 55vw, 680px)" }}
+          style={{ height: "clamp(520px, 82vw, 1100px)" }}
         >
-          <div className="absolute left-1/2 top-1/2 w-[65%] max-w-[720px] -translate-x-[62%] -translate-y-[48%] -rotate-3 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl transition-transform duration-500 hover:-rotate-1 hover:scale-[1.02]">
+          <div className="absolute left-1/2 top-1/2 w-[80%] max-w-[1000px] -translate-x-[62%] -translate-y-[48%] -rotate-3 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl transition-transform duration-500 hover:-rotate-1 hover:scale-[1.02]">
             <img
               src="/Weekly.png"
               alt="CentonisCC weekly goals"
               className="w-full h-auto rounded-xl"
             />
           </div>
-          <div className="absolute left-1/2 top-1/2 w-[65%] max-w-[720px] -translate-x-[38%] -translate-y-[52%] rotate-2 rounded-2xl border border-zinc-200 bg-white p-1 shadow-2xl transition-transform duration-500 hover:rotate-0 hover:scale-[1.02]">
+          <div className="absolute left-1/2 top-1/2 w-[80%] max-w-[1000px] -translate-x-[38%] -translate-y-[52%] rotate-2 rounded-2xl border border-zinc-200 bg-white p-1 shadow-2xl transition-transform duration-500 hover:rotate-0 hover:scale-[1.02]">
             <img
               src="/Notettaking.png"
               alt="CentonisCC note-taking"

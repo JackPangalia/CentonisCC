@@ -118,6 +118,7 @@ export function DailyTaskPage({
               type="date"
               value={date}
               onChange={(e) => handleDateChange(e.target.value)}
+              tabIndex={-1}
               className="flex-1 min-w-0 w-full bg-transparent text-base sm:text-sm text-zinc-900 dark:text-zinc-100 outline-none placeholder:text-zinc-400 py-2 sm:py-1 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 px-2 -mx-2 sm:px-1 sm:-mx-1 rounded transition-colors touch-manipulation border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 sm:border-transparent"
             />
           </div>

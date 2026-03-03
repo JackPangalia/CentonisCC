@@ -24,6 +24,14 @@ export function middleware(request: NextRequest) {
   const authRoute =
     pathname.startsWith("/login") || pathname.startsWith("/signup");
 
+  if (pathname === "/") {
+    if (isAuthed) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    } else {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+  }
+
   if (appRoute && !isAuthed) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
@@ -37,6 +45,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
     "/dashboard/:path*",
     "/daily/:path*",
     "/weekly/:path*",
