@@ -77,7 +77,7 @@ export function DailyTaskPage({
   }
 
   return (
-    <div className="mx-auto max-w-4xl pb-16 sm:pb-24">
+    <div className="mx-auto max-w-5xl pb-16 sm:pb-24">
       {!onBack && (
         <div className="px-4 pt-4 sm:px-8 md:px-12">
           <button

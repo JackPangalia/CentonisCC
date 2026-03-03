@@ -10,7 +10,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const isFullscreenPage =
-    pathname?.match(/^\/entry\/[^/]+$/) || pathname?.match(/^\/projects\/[^/]+$/);
+    pathname?.match(/^\/entry\/[^/]+$/) || pathname?.match(/^\/projects\/[^/]+$/) || pathname === "/onboarding";
 
   if (isLoading || !user) {
     return <main className="p-6 text-sm text-slate-600">Loading...</main>;

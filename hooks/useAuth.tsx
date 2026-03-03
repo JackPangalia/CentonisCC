@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user && !isPublicRoute && !isOnboarding) {
       router.replace("/login");
     }
-    if (user && (pathname === "/" || isAuthRoute)) {
+    if (user && isAuthRoute) {
       router.replace("/dashboard");
     }
   }, [isLoading, pathname, router, user]);

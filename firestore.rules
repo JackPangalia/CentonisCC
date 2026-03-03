@@ -28,11 +28,19 @@ service cloud.firestore {
 
     match /workspaceMembers/{membershipId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.userId == request.auth.uid &&
+        membershipId == memberDocId(request.resource.data.workspaceId, request.auth.uid);
       allow delete: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         isWorkspaceMember(resource.data.workspaceId)
       );
+    }
+
+    match /workspaceInvites/{inviteCode} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isWorkspaceMember(request.resource.data.workspaceId);
+      allow update, delete: if isSignedIn() && isWorkspaceMember(resource.data.workspaceId);
     }
 
     match /dailyTasks/{taskId} {

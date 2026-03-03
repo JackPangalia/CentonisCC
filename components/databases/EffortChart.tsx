@@ -10,7 +10,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
-import { listDailyTasks } from "@/services/dailyTaskService";
+import { listDailyTasksForEffort } from "@/services/dailyTaskService";
 import type { DailyTask } from "@/types/models";
 
 function getMonthRange() {
@@ -43,12 +43,9 @@ export function EffortChart() {
     async function load() {
       if (!workspaceId) return;
       setIsLoading(true);
-      const allTasks = await listDailyTasks(workspaceId);
       const startStr = start.toISOString().split("T")[0];
       const endStr = end.toISOString().split("T")[0];
-      const monthTasks = allTasks.filter(
-        (t) => t.date >= startStr && t.date <= endStr
-      );
+      const monthTasks = await listDailyTasksForEffort(workspaceId, startStr, endStr);
       setTasks(monthTasks);
       setIsLoading(false);
     }

@@ -13,6 +13,14 @@ import {
 import { db } from "@/lib/firebase";
 import type { Workspace, WorkspaceMember } from "@/types/models";
 
+const WORKSPACE_INVITES_COLLECTION = "workspaceInvites";
+
+type WorkspaceInvite = {
+  workspaceId: string;
+  createdByUserId: string;
+  createdAt: string;
+};
+
 function nowIso(): string {
   return new Date().toISOString();
 }
@@ -56,6 +64,12 @@ export async function createWorkspace(
   await setDoc(doc(db, "workspaceMembers", memberDocId), member);
 
   await updateDoc(doc(db, "users", userId), { workspaceId: docRef.id });
+  const invite: WorkspaceInvite = {
+    workspaceId: docRef.id,
+    createdByUserId: userId,
+    createdAt: timestamp,
+  };
+  await setDoc(doc(db, WORKSPACE_INVITES_COLLECTION, inviteCode), invite);
 
   return workspace;
 }
@@ -65,24 +79,25 @@ export async function joinWorkspaceByInviteCode(
   userId: string,
   userEmail: string
 ): Promise<Workspace> {
-  const snapshot = await getDocs(
-    query(collection(db, "workspaces"), where("inviteCode", "==", inviteCode))
+  const normalizedCode = inviteCode.trim().toUpperCase();
+  const inviteSnapshot = await getDoc(
+    doc(db, WORKSPACE_INVITES_COLLECTION, normalizedCode)
   );
 
-  if (snapshot.empty) {
+  if (!inviteSnapshot.exists()) {
     throw new Error("Invalid invite code");
   }
 
-  const wsDoc = snapshot.docs[0];
-  const workspace = { id: wsDoc.id, ...wsDoc.data() } as Workspace;
+  const invite = inviteSnapshot.data() as WorkspaceInvite;
+  const workspaceId = invite.workspaceId;
 
-  const memberDocId = `${workspace.id}_${userId}`;
+  const memberDocId = `${workspaceId}_${userId}`;
   const existingMember = await getDoc(doc(db, "workspaceMembers", memberDocId));
 
   if (!existingMember.exists()) {
     const member: WorkspaceMember = {
       id: memberDocId,
-      workspaceId: workspace.id,
+      workspaceId,
       userId,
       userEmail,
       joinedAt: nowIso(),
@@ -90,7 +105,16 @@ export async function joinWorkspaceByInviteCode(
     await setDoc(doc(db, "workspaceMembers", memberDocId), member);
   }
 
-  await updateDoc(doc(db, "users", userId), { workspaceId: workspace.id });
+  await updateDoc(doc(db, "users", userId), { workspaceId });
+
+  const workspaceSnapshot = await getDoc(doc(db, "workspaces", workspaceId));
+  if (!workspaceSnapshot.exists()) {
+    throw new Error("Workspace not found");
+  }
+  const workspace = {
+    id: workspaceSnapshot.id,
+    ...workspaceSnapshot.data(),
+  } as Workspace;
 
   return workspace;
 }
@@ -148,7 +172,25 @@ export async function leaveWorkspace(workspaceId: string, userId: string) {
 }
 
 export async function regenerateInviteCode(workspaceId: string): Promise<string> {
+  const workspaceSnapshot = await getDoc(doc(db, "workspaces", workspaceId));
+  if (!workspaceSnapshot.exists()) {
+    throw new Error("Workspace not found");
+  }
+  const oldCode = (workspaceSnapshot.data() as Workspace).inviteCode;
   const newCode = generateInviteCode();
+  const invite: WorkspaceInvite = {
+    workspaceId,
+    createdByUserId: (workspaceSnapshot.data() as Workspace).createdByUserId,
+    createdAt: nowIso(),
+  };
+  if (oldCode) {
+    const oldInviteRef = doc(db, WORKSPACE_INVITES_COLLECTION, oldCode);
+    const oldInviteSnapshot = await getDoc(oldInviteRef);
+    if (oldInviteSnapshot.exists()) {
+      await deleteDoc(oldInviteRef);
+    }
+  }
+  await setDoc(doc(db, WORKSPACE_INVITES_COLLECTION, newCode), invite);
   await updateDoc(doc(db, "workspaces", workspaceId), {
     inviteCode: newCode,
     updatedAt: nowIso(),

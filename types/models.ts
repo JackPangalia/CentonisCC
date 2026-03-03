@@ -44,6 +44,7 @@ export interface DailyTask {
   description: string;
   status: EntryStatus;
   date: string;
+  archived?: boolean;
   coverImage?: string;
   icon?: string;
   createdAt: string;

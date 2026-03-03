@@ -53,9 +53,9 @@ export async function listDailyTasks(
   const snapshot = await getDocs(
     query(collection(db, "dailyTasks"), ...constraints)
   );
-  return snapshot.docs.map(
-    (item) => ({ id: item.id, ...item.data() }) as DailyTask
-  );
+  return snapshot.docs
+    .map((item) => ({ id: item.id, ...item.data() }) as DailyTask)
+    .filter((t) => !t.archived);
 }
 
 export async function updateDailyTask(
@@ -82,6 +82,29 @@ export async function updateDailyTaskOwner(taskId: string, newUserId: string) {
   });
 }
 
+export async function archiveDailyTask(taskId: string) {
+  await updateDoc(doc(db, "dailyTasks", taskId), {
+    archived: true,
+    updatedAt: nowIso(),
+  });
+}
+
 export async function deleteDailyTask(taskId: string) {
   await deleteDoc(doc(db, "dailyTasks", taskId));
+}
+
+export async function listDailyTasksForEffort(
+  workspaceId: string,
+  startDate: string,
+  endDate: string
+): Promise<DailyTask[]> {
+  const snapshot = await getDocs(
+    query(
+      collection(db, "dailyTasks"),
+      where("workspaceId", "==", workspaceId)
+    )
+  );
+  return snapshot.docs
+    .map((item) => ({ id: item.id, ...item.data() }) as DailyTask)
+    .filter((t) => t.date >= startDate && t.date <= endDate);
 }

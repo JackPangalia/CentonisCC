@@ -85,7 +85,7 @@ export function DatabaseEntryPage({
   }
 
   return (
-    <div className="mx-auto max-w-4xl pb-16">
+    <div className="mx-auto max-w-5xl pb-16">
       {!onBack && (
         <div className="px-8 pt-4 sm:px-12">
           <button

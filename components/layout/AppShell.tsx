@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/services/authService";
 import { FloatingDock } from "@/components/ui/FloatingDock";
 import { Home, CalendarDays, Settings, LogOut } from "lucide-react";
@@ -13,7 +13,9 @@ type AppShellProps = {
 
 export function AppShell({ children, fullscreen }: AppShellProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { workspace } = useWorkspaceContext();
+  const isOnboarding = pathname === "/onboarding";
 
   async function handleLogout() {
     await logout();
@@ -33,6 +35,8 @@ export function AppShell({ children, fullscreen }: AppShellProps) {
       </div>
     );
   }
+
+  const isWideLayout = pathname?.startsWith("/daily");
 
   return (
     <div className="min-h-screen pb-24">
@@ -55,11 +59,11 @@ export function AppShell({ children, fullscreen }: AppShellProps) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1400px] px-4 sm:px-8 pt-16 space-y-4">
+      <main className={`mx-auto max-w-[1400px] pt-16 space-y-4 ${isWideLayout ? "" : "px-4 sm:px-8"}`}>
         {children}
       </main>
 
-      <FloatingDock items={navItems} />
+      {!isOnboarding && <FloatingDock items={navItems} />}
     </div>
   );
 }

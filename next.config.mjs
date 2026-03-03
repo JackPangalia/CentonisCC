@@ -1,4 +1,12 @@
-// This file holds the Next.js configuration for the app.
+import withPWA from "next-pwa";
+
+const pwa = withPWA({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  skipWaiting: true,
+});
+
 const nextConfig = {};
 
-export default nextConfig;
+export default pwa(nextConfig);

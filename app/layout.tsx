@@ -1,12 +1,26 @@
 /* This file defines the root HTML layout and app-wide metadata. */
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import { AppProviders } from "@/app/providers";
 
+export const viewport: Viewport = {
+  themeColor: "#1e3a5f",
+};
+
 export const metadata: Metadata = {
-  title: "Workspace MVP",
-  description: "Personal and team goal workspace",
+  title: "CentonisCC — Your business, not your to-do list",
+  description:
+    "The workspace for founders who want to move fast, stay focused, and actually hit their goals — without drowning in tools. Free forever.",
+  applicationName: "CentonisCC",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "CentonisCC",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -16,6 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
       <body
         className={[
           GeistSans.className,
